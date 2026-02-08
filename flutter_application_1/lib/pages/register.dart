@@ -1,20 +1,9 @@
 import 'package:flutter/material.dart';
-import 'home.dart'; // dashboard
-import 'register.dart'; // pagina registrazione
+import 'login.dart';
+import 'home.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
-
-  @override
-  State<LoginPage> createState() => _LoginPageState();
-}
-
-class _LoginPageState extends State<LoginPage> {
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-
-  bool rememberMe = false;
-  bool hidePassword = true;
+class RegisterPage extends StatelessWidget {
+  const RegisterPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +32,7 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 28),
 
                 const Text(
-                  'Accedi',
+                  'Registrati',
                   style: TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
@@ -52,15 +41,13 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 8),
 
                 const Text(
-                  'Inserisci le tue credenziali',
+                  'Crea il tuo account',
                   style: TextStyle(fontSize: 14, color: Colors.grey),
                 ),
                 const SizedBox(height: 32),
 
                 // EMAIL
                 TextField(
-                  controller: emailController,
-                  keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
                     labelText: 'Email',
                     hintText: 'email@esempio.com',
@@ -75,55 +62,37 @@ class _LoginPageState extends State<LoginPage> {
 
                 // PASSWORD
                 TextField(
-                  controller: passwordController,
-                  obscureText: hidePassword,
+                  obscureText: true,
                   decoration: InputDecoration(
                     labelText: 'Password',
                     hintText: '••••••••',
                     prefixIcon: const Icon(Icons.lock_outline),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        hidePassword
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          hidePassword = !hidePassword;
-                        });
-                      },
-                    ),
+                    suffixIcon: const Icon(Icons.visibility_off),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                 ),
 
-                const SizedBox(height: 12),
+                const SizedBox(height: 20),
 
-                // RICORDAMI + PASSWORD DIMENTICATA
-                Row(
-                  children: [
-                    Checkbox(
-                      value: rememberMe,
-                      onChanged: (value) {
-                        setState(() {
-                          rememberMe = value!;
-                        });
-                      },
+                // CONFERMA PASSWORD
+                TextField(
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: 'Conferma password',
+                    hintText: '••••••••',
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: const Icon(Icons.visibility_off),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    const Text('Ricordami'),
-                    const Spacer(),
-                    TextButton(
-                      onPressed: () {},
-                      child: const Text('Password dimenticata?'),
-                    ),
-                  ],
+                  ),
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 28),
 
-                // BOTTONE LOGIN
+                // BOTTONE REGISTRATI
                 SizedBox(
                   width: double.infinity,
                   height: 50,
@@ -139,13 +108,12 @@ class _LoginPageState extends State<LoginPage> {
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                          builder: (context) =>
-                              const DashboardPage(),
+                          builder: (context) => const DashboardPage(),
                         ),
                       );
                     },
                     child: const Text(
-                      'Accedi',
+                      'Registrati',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -174,23 +142,22 @@ class _LoginPageState extends State<LoginPage> {
 
                 const SizedBox(height: 20),
 
-                // REGISTRATI
+                // TORNA AL LOGIN
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text('Non hai un account?'),
+                    const Text('Hai già un account?'),
                     TextButton(
                       onPressed: () {
-                        Navigator.push(
+                        Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                const RegisterPage(),
+                            builder: (context) => const LoginPage(),
                           ),
                         );
                       },
                       child: const Text(
-                        'Registrati',
+                        'Accedi',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),

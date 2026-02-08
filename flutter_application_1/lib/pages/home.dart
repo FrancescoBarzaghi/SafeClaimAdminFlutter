@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'newaccount.dart';
 import 'login.dart';
 import 'elenco.dart';
+import 'gestioneut.dart';
 
 void main() {
   runApp(const MyApp());
@@ -89,7 +90,6 @@ class _Header extends StatelessWidget {
             ),
             const Spacer(),
 
-            /// NOTIFICHE
             PopupMenuButton<String>(
               offset: const Offset(0, 50),
               icon: const Icon(Icons.notifications, color: Colors.white),
@@ -100,7 +100,6 @@ class _Header extends StatelessWidget {
 
             const SizedBox(width: 16),
 
-            /// ACCOUNT
             PopupMenuButton<String>(
               offset: const Offset(0, 50),
               child: const CircleAvatar(
@@ -119,10 +118,7 @@ class _Header extends StatelessWidget {
                 }
               },
               itemBuilder: (_) => const [
-                PopupMenuItem(
-                  enabled: false,
-                  child: Text('Admin'),
-                ),
+                PopupMenuItem(enabled: false, child: Text('Admin')),
                 PopupMenuDivider(),
                 PopupMenuItem(
                   value: 'logout',
@@ -210,12 +206,19 @@ class _UserManagementCard extends StatelessWidget {
 
           _ActionButton(
             'Gestisci Ruoli Utenti',
-            onTap: () {},
+            onTap: () {
+              // Mostra prima la lista utenti
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ListaUtentiPage(),
+                ),
+              );
+            },
           ),
 
           const SizedBox(height: 10),
 
-          /// 🔵 COLLEGAMENTO A elenco.dart
           _ActionButton(
             'Visualizza Elenco',
             onTap: () {
@@ -232,6 +235,49 @@ class _UserManagementCard extends StatelessWidget {
     );
   }
 }
+
+/* ---------------- LISTA UTENTI PER SELEZIONE ---------------- */
+
+class ListaUtentiPage extends StatelessWidget {
+  const ListaUtentiPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Seleziona Utente", style: TextStyle(color: Colors.white)),
+        backgroundColor: const Color(0xFF1E66F5),
+        leading: const BackButton(color: Colors.white),
+      ),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: mockUsers.length,
+        itemBuilder: (_, i) {
+          final user = mockUsers[i];
+          return Card(
+            margin: const EdgeInsets.only(bottom: 12),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: ListTile(
+              title: Text(user.name),
+              subtitle: Text(user.email),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => GestioneUtPage(user: user),
+                  ),
+                );
+              },
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+/* ---------------- ACTION BUTTON ---------------- */
 
 class _ActionButton extends StatelessWidget {
   final String label;

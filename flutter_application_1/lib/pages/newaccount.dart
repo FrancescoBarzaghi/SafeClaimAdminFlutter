@@ -23,7 +23,7 @@ class _NewAccountPageState extends State<NewAccountPage> {
       /// APP BAR
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: const Color.fromARGB(255, 19, 145, 218), // blu
+        backgroundColor: Color(0xFF2563EB),
         foregroundColor: Colors.white, // testo bianco
         leading: const BackButton(),
         titleSpacing: 0,
@@ -142,7 +142,7 @@ class _NewAccountPageState extends State<NewAccountPage> {
                   // per ora non fa nulla
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromARGB(255, 19, 145, 218),
+                  backgroundColor:  Color(0xFF2563EB),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
