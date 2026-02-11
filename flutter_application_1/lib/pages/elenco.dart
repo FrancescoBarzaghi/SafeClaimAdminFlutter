@@ -122,7 +122,7 @@ class ElencoPage extends StatefulWidget {
 class _ElencoPageState extends State<ElencoPage> {
   String search = "";
   UserRole? selectedRole;
-
+  
   List<AppUser> get filteredUsers {
     return mockUsers.where((u) {
       final s = search.toLowerCase();

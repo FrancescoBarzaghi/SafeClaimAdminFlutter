@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'elenco.dart';
 
 class NewAccountPage extends StatefulWidget {
-  const NewAccountPage({Key? key}) : super(key: key);
+  const NewAccountPage({super.key});
 
   @override
   State<NewAccountPage> createState() => _NewAccountPageState();
@@ -9,6 +10,7 @@ class NewAccountPage extends StatefulWidget {
 
 class _NewAccountPageState extends State<NewAccountPage> {
   bool obscurePassword = true;
+  String searchQuery = "";
 
   bool admin = false;
   bool soccorso = false;
@@ -23,7 +25,7 @@ class _NewAccountPageState extends State<NewAccountPage> {
       /// APP BAR
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Color(0xFF2563EB),
+        backgroundColor: Color(0xFF1E66F5), // blu intenso
         foregroundColor: Colors.white, // testo bianco
         leading: const BackButton(),
         titleSpacing: 0,
@@ -47,6 +49,7 @@ class _NewAccountPageState extends State<NewAccountPage> {
             ),
           ],
         ),
+
       ),
 
       /// BODY
@@ -55,6 +58,7 @@ class _NewAccountPageState extends State<NewAccountPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (searchQuery.isNotEmpty) ..._buildSearchResults(),
             const SizedBox(height: 8),
 
             /// TITOLO PAGINA
@@ -215,5 +219,75 @@ class _NewAccountPageState extends State<NewAccountPage> {
         contentPadding: const EdgeInsets.symmetric(horizontal: 12),
       ),
     );
+  }
+
+  List<Widget> _buildSearchResults() {
+    final filtered = mockUsers.where((u) {
+      final s = searchQuery.toLowerCase();
+      return u.name.toLowerCase().contains(s) ||
+          u.email.toLowerCase().contains(s) ||
+          u.phone.contains(searchQuery);
+    }).toList();
+
+    if (filtered.isEmpty) {
+      return [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.orange[50],
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.orange.shade200),
+          ),
+          child: const Row(
+            children: [
+              Icon(Icons.info, color: Colors.orange),
+              SizedBox(width: 8),
+              Text("Nessun utente trovato", style: TextStyle(color: Colors.orange)),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+      ];
+    }
+
+    return [
+      Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.blue[50],
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.blue.shade200),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text("Utenti trovati:", style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            ...filtered.take(5).map((u) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 16,
+                    backgroundImage: NetworkImage('https://via.placeholder.com/150'),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(u.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                        Text(u.email, style: TextStyle(color: Colors.grey[600], fontSize: 11)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            )),
+          ],
+        ),
+      ),
+      const SizedBox(height: 16),
+    ];
   }
 }

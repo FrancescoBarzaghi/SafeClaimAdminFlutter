@@ -238,22 +238,57 @@ class _UserManagementCard extends StatelessWidget {
 
 /* ---------------- LISTA UTENTI PER SELEZIONE ---------------- */
 
-class ListaUtentiPage extends StatelessWidget {
+class ListaUtentiPage extends StatefulWidget {
   const ListaUtentiPage({super.key});
 
   @override
+  _ListaUtentiPageState createState() => _ListaUtentiPageState();
+}
+
+class _ListaUtentiPageState extends State<ListaUtentiPage> {
+  String searchQuery = '';
+
+  @override
   Widget build(BuildContext context) {
+    final filtered = mockUsers.where((u) {
+      final q = searchQuery.toLowerCase();
+      return q.isEmpty ||
+          u.name.toLowerCase().contains(q) ||
+          u.email.toLowerCase().contains(q);
+    }).toList();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Seleziona Utente", style: TextStyle(color: Colors.white)),
         backgroundColor: const Color(0xFF1E66F5),
         leading: const BackButton(color: Colors.white),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(60),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: TextField(
+              onChanged: (value) => setState(() => searchQuery = value),
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: "Cerca utente...",
+                hintStyle: const TextStyle(color: Colors.white70),
+                prefixIcon: const Icon(Icons.search, color: Colors.white70),
+                filled: true,
+                fillColor: Colors.white.withOpacity(0.1),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: mockUsers.length,
+        itemCount: filtered.length,
         itemBuilder: (_, i) {
-          final user = mockUsers[i];
+          final user = filtered[i];
           return Card(
             margin: const EdgeInsets.only(bottom: 12),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

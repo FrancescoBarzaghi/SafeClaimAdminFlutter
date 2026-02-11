@@ -12,11 +12,24 @@ class GestioneUtPage extends StatefulWidget {
 
 class _GestioneUtPageState extends State<GestioneUtPage> {
   late AppUser user;
+  String searchQuery = "";
 
   @override
   void initState() {
     super.initState();
     user = widget.user;
+  }
+
+  List<AppUser> get filteredUsers {
+    if (searchQuery.isEmpty) {
+      return mockUsers;
+    }
+    return mockUsers.where((u) {
+      final s = searchQuery.toLowerCase();
+      return u.name.toLowerCase().contains(s) ||
+          u.email.toLowerCase().contains(s) ||
+          u.phone.contains(searchQuery);
+    }).toList();
   }
 
   @override
@@ -35,25 +48,6 @@ class _GestioneUtPageState extends State<GestioneUtPage> {
         actions: [
           IconButton(onPressed: () {}, icon: const Icon(Icons.group, color: Colors.white))
         ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(60),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: "Cerca utente...",
-                hintStyle: const TextStyle(color: Colors.white70),
-                prefixIcon: const Icon(Icons.search, color: Colors.white70),
-                filled: true,
-                fillColor: Colors.white.withOpacity(0.1),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-            ),
-          ),
-        ),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -61,9 +55,9 @@ class _GestioneUtPageState extends State<GestioneUtPage> {
           children: [
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Text("8 utenti", style: TextStyle(color: Colors.grey[600])),
+              child: Text("${filteredUsers.length} utenti", style: TextStyle(color: Colors.grey[600])),
             ),
-            // Card Utente
+            // Card Utente Selezionato
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16),
               padding: const EdgeInsets.all(20),
@@ -146,6 +140,59 @@ class _GestioneUtPageState extends State<GestioneUtPage> {
                 ],
               ),
             ),
+            if (searchQuery.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text("Risultati ricerca",
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    const SizedBox(height: 12),
+                    ...filteredUsers
+                        .where((u) => u.id != user.id)
+                        .take(5)
+                        .map((u) => GestureDetector(
+                              onTap: () => setState(() => user = u),
+                              child: Container(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue[50],
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.blue.shade200),
+                                ),
+                                child: Row(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 20,
+                                      backgroundImage: NetworkImage(
+                                          'https://via.placeholder.com/150'),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(u.name,
+                                              style: const TextStyle(
+                                                  fontWeight: FontWeight.bold)),
+                                          Text(u.email,
+                                              style: TextStyle(
+                                                  color: Colors.grey[600],
+                                                  fontSize: 12)),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ))
+                        ,
+                  ],
+                ),
+              ),
           ],
         ),
       ),
