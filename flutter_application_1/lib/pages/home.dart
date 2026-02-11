@@ -81,13 +81,8 @@ class _Header extends StatelessWidget {
       child: SafeArea(
         child: Row(
           children: [
-            Image.asset(
-              'assets/logo.png',
-              height: 50,
-              fit: BoxFit.contain,
-              errorBuilder: (c, o, s) =>
-                  const Icon(Icons.shield, color: Colors.white, size: 40),
-            ),
+              Image.asset('assets/logo.png',height: 130,width: 180,fit: BoxFit.contain,),
+              const SizedBox(height: 28),
             const Spacer(),
 
             PopupMenuButton<String>(
@@ -266,18 +261,34 @@ class _ListaUtentiPageState extends State<ListaUtentiPage> {
           preferredSize: const Size.fromHeight(60),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: TextField(
-              onChanged: (value) => setState(() => searchQuery = value),
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                hintText: "Cerca utente...",
-                hintStyle: const TextStyle(color: Colors.white70),
-                prefixIcon: const Icon(Icons.search, color: Colors.white70),
-                filled: true,
-                fillColor: Colors.white.withOpacity(0.1),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide.none,
+            child: Container(
+              height: 55,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF2F2F2), // grigio chiaro
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: Colors.grey.shade400,
+                  width: 1,
+                ),
+              ),
+              child: TextField(
+                onChanged: (v) => setState(() => searchQuery = v),
+                style: const TextStyle(
+                  color: Colors.black87,
+                  fontSize: 16,
+                ),
+                decoration: const InputDecoration(
+                  hintText: "Cerca utente...",
+                  hintStyle: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 16,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: Colors.grey,
+                  ),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(vertical: 18),
                 ),
               ),
             ),

@@ -185,19 +185,33 @@ class _ElencoPageState extends State<ElencoPage> {
 
   Widget _searchBar() {
     return Container(
+      height: 55,
       decoration: BoxDecoration(
-        color: const Color(0xFF2563EB), // bg-blue-600
-        borderRadius: BorderRadius.circular(12),
+        color: const Color(0xFFF2F2F2), // grigio chiaro
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.grey.shade400,
+          width: 1,
+        ),
       ),
       child: TextField(
         onChanged: (v) => setState(() => search = v),
-        style: const TextStyle(color: Colors.white),
+        style: const TextStyle(
+          color: Colors.black87,
+          fontSize: 16,
+        ),
         decoration: const InputDecoration(
           hintText: "Cerca utente...",
-          hintStyle: TextStyle(color: Color(0xFFBFDBFE)),
-          prefixIcon: Icon(Icons.search, color: Colors.white),
+          hintStyle: TextStyle(
+            color: Colors.grey,
+            fontSize: 16,
+          ),
+          prefixIcon: Icon(
+            Icons.search,
+            color: Colors.grey,
+          ),
           border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(vertical: 14),
+          contentPadding: EdgeInsets.symmetric(vertical: 18),
         ),
       ),
     );
