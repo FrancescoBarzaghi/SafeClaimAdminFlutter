@@ -28,8 +28,6 @@ class RegisterPage extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                 Image.asset('assets/logo.png',height: 130,width: 180,fit: BoxFit.contain,),
-              const SizedBox(height: 28),
 
                 const Text(
                   'Registrati',
@@ -149,12 +147,13 @@ class RegisterPage extends StatelessWidget {
                     const Text('Hai già un account?'),
                     TextButton(
                       onPressed: () {
-                        Navigator.pushReplacement(
+                        /*Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
                             builder: (context) => const LoginPage(),
                           ),
-                        );
+                        );*/
+                        Navigator.of(context).pop();
                       },
                       child: const Text(
                         'Accedi',

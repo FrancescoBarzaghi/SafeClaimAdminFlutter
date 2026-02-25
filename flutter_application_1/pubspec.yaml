@@ -22,3 +22,4 @@ flutter:
 
   assets:
     - assets/logo.png
+    - assets/safeClaimText.png

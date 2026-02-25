@@ -39,8 +39,6 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Image.asset('assets/logo.png',height: 130,width: 180,fit: BoxFit.contain,),
-                const SizedBox(height: 28),
 
                 const Text(
                   'Accedi',
@@ -63,7 +61,7 @@ class _LoginPageState extends State<LoginPage> {
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
                     labelText: 'Email',
-                    hintText: 'email@esempio.com',
+                    hintText: 'esempio@email.com',
                     prefixIcon: const Icon(Icons.email_outlined),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
