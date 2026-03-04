@@ -9,6 +9,12 @@ class NewAccountPage extends StatefulWidget {
 }
 
 class _NewAccountPageState extends State<NewAccountPage> {
+  final _formKey = GlobalKey<FormState>();
+
+  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
   bool obscurePassword = true;
   String searchQuery = "";
 
@@ -20,146 +26,157 @@ class _NewAccountPageState extends State<NewAccountPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey.shade50,
 
       /// APP BAR
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Color(0xFF1E66F5), // blu intenso
-        foregroundColor: Colors.white, // testo bianco
+        backgroundColor: const Color(0xFF1E66F5),
+        foregroundColor: Colors.white,
         leading: const BackButton(),
         titleSpacing: 0,
-        title: Column(
+        title: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
+          children: [
             Text(
               "Creazione Account",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 2),
             Text(
               "Creazione Account e Utenti",
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.white70,
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.white70),
             ),
           ],
         ),
-
       ),
 
       /// BODY
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (searchQuery.isNotEmpty) ..._buildSearchResults(),
-            const SizedBox(height: 8),
+      body: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 10),
 
-            /// TITOLO PAGINA
-            Row(
-              children: const [
-                Icon(Icons.shield_outlined, color: Colors.blue),
-                SizedBox(width: 8),
-                Text(
-                  "Crea Nuovo Account",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+              /// TITOLO
+              Row(
+                children: const [
+                  Icon(Icons.shield_outlined, color: Color(0xFF2563EB)),
+                  SizedBox(width: 8),
+                  Text(
+                    "Crea Nuovo Account",
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
 
-            const SizedBox(height: 24),
+              const SizedBox(height: 30),
 
-            /// USERNAME
-            _label("Username"),
-            _textField(
-              hint: "es. mario.rossi",
-              errorText: "Username è obbligatorio",
-            ),
+              /// USERNAME
+              _label("Username"),
+              _textField(
+                hint: "es. mario.rossi",
+                controller: usernameController,
+              ),
 
-            const SizedBox(height: 16),
+              const SizedBox(height: 20),
 
-            /// EMAIL
-            _label("Email"),
-            _textField(
-              hint: "email@esempio.it",
-              errorText: "Email è obbligatoria",
-            ),
+              /// EMAIL
+              _label("Email"),
+              _textField(
+                hint: "email@esempio.it",
+                controller: emailController,
+              ),
 
-            const SizedBox(height: 16),
+              const SizedBox(height: 20),
 
-            /// PASSWORD
-            _label("Password"),
-            TextField(
-              obscureText: obscurePassword,
-              decoration: InputDecoration(
-                border: const OutlineInputBorder(),
-                errorText: "Password è obbligatoria",
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    obscurePassword ? Icons.visibility_off : Icons.visibility,
-                  ),
+              /// PASSWORD
+              _label("Password"),
+              _textField(
+                hint: "Inserisci password",
+                controller: passwordController,
+                isPassword: true,
+              ),
+
+              const SizedBox(height: 30),
+
+              /// RUOLI
+              _label("Ruoli"),
+              const SizedBox(height: 12),
+
+              _roleTile("Admin", admin, (v) {
+                setState(() => admin = v);
+              }),
+              _roleTile("Soccorso", soccorso, (v) {
+                setState(() => soccorso = v);
+              }),
+              _roleTile("Officina", officina, (v) {
+                setState(() => officina = v);
+              }),
+              _roleTile("Perito", perito, (v) {
+                setState(() => perito = v);
+              }),
+
+              const SizedBox(height: 30),
+
+              /// BOTTONE CREA
+              SizedBox(
+                width: double.infinity,
+                height: 55,
+                child: ElevatedButton(
                   onPressed: () {
-                    setState(() {
-                      obscurePassword = !obscurePassword;
-                    });
+                    if (_formKey.currentState!.validate()) {
+                      print("Username: ${usernameController.text}");
+                      print("Email: ${emailController.text}");
+                      print("Password: ${passwordController.text}");
+                    }
                   },
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            /// RUOLI
-            _label("Ruoli"),
-            const SizedBox(height: 8),
-
-            _roleTile("Admin", admin, (v) {
-              setState(() => admin = v);
-            }),
-            _roleTile("Soccorso", soccorso, (v) {
-              setState(() => soccorso = v);
-            }),
-            _roleTile("Officina", officina, (v) {
-              setState(() => officina = v);
-            }),
-            _roleTile("Perito", perito, (v) {
-              setState(() => perito = v);
-            }),
-
-            const SizedBox(height: 24),
-
-            /// BOTTONE CREA
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: () {
-                  // per ora non fa nulla
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor:  Color(0xFF2563EB),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2563EB),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 3,
                   ),
-                ),
-                child: const Text(
-                  "Crea",
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white, // testo bianco
+                  child: const Text(
+                    "Crea Account",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// LABEL CON *
+  Widget _label(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: RichText(
+        text: TextSpan(
+          text: text,
+          style: const TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
+          children: const [
+            TextSpan(
+              text: " *",
+              style: TextStyle(color: Colors.red),
             ),
           ],
         ),
@@ -167,127 +184,96 @@ class _NewAccountPageState extends State<NewAccountPage> {
     );
   }
 
-  /// ---------- COMPONENTI UI ----------
-
-  Widget _label(String text) {
-    return RichText(
-      text: TextSpan(
-        text: text,
-        style: const TextStyle(
-          color: Colors.black,
-          fontWeight: FontWeight.w600,
-        ),
-        children: const [
-          TextSpan(
-            text: " *",
-            style: TextStyle(color: Colors.red),
-          ),
-        ],
-      ),
-    );
-  }
-
+  /// TEXT FIELD MODERNO
   Widget _textField({
     required String hint,
-    required String errorText,
+    required TextEditingController controller,
+    bool isPassword = false,
   }) {
-    return TextField(
+    return TextFormField(
+      controller: controller,
+      obscureText: isPassword ? obscurePassword : false,
+      validator: (value) {
+        if (value == null || value.trim().isEmpty) {
+          return "Campo obbligatorio";
+        }
+        return null;
+      },
       decoration: InputDecoration(
         hintText: hint,
-        errorText: errorText,
-        border: const OutlineInputBorder(),
+        filled: true,
+        fillColor: Colors.grey.shade100,
+
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+
+        focusedBorder: const OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderSide: BorderSide(color: Color(0xFF2563EB), width: 2),
+        ),
+
+        errorBorder: const OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderSide: BorderSide(color: Colors.red, width: 2),
+        ),
+
+        focusedErrorBorder: const OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderSide: BorderSide(color: Colors.red, width: 2),
+        ),
+
+        suffixIcon: isPassword
+            ? IconButton(
+                icon: Icon(
+                  obscurePassword
+                      ? Icons.visibility_off
+                      : Icons.visibility,
+                ),
+                onPressed: () {
+                  setState(() {
+                    obscurePassword = !obscurePassword;
+                  });
+                },
+              )
+            : null,
       ),
     );
   }
 
+  /// CHECKBOX RUOLI MODERNE
   Widget _roleTile(
     String label,
     bool value,
     Function(bool) onChanged,
   ) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(8),
       ),
       child: CheckboxListTile(
         value: value,
         onChanged: (v) => onChanged(v ?? false),
-        title: Text(label),
+        title: Text(
+          label,
+          style: const TextStyle(fontWeight: FontWeight.w500),
+        ),
+        activeColor: const Color(0xFF2563EB),
         controlAffinity: ListTileControlAffinity.leading,
         contentPadding: const EdgeInsets.symmetric(horizontal: 12),
       ),
     );
-  }
-
-  List<Widget> _buildSearchResults() {
-    final filtered = mockUsers.where((u) {
-      final s = searchQuery.toLowerCase();
-      return u.name.toLowerCase().contains(s) ||
-          u.email.toLowerCase().contains(s) ||
-          u.phone.contains(searchQuery);
-    }).toList();
-
-    if (filtered.isEmpty) {
-      return [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.orange[50],
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.orange.shade200),
-          ),
-          child: const Row(
-            children: [
-              Icon(Icons.info, color: Colors.orange),
-              SizedBox(width: 8),
-              Text("Nessun utente trovato", style: TextStyle(color: Colors.orange)),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-      ];
-    }
-
-    return [
-      Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.blue[50],
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.blue.shade200),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text("Utenti trovati:", style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            ...filtered.take(5).map((u) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 16,
-                    backgroundImage: NetworkImage('https://via.placeholder.com/150'),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(u.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                        Text(u.email, style: TextStyle(color: Colors.grey[600], fontSize: 11)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            )),
-          ],
-        ),
-      ),
-      const SizedBox(height: 16),
-    ];
   }
 }
