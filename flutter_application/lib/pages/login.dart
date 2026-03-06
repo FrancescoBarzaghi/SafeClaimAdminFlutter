@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'home.dart'; // dashboard
-import 'register.dart'; // pagina registrazione
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -151,48 +150,6 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // SEPARATORE
-                Row(
-                  children: const [
-                    Expanded(child: Divider()),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Text(
-                        'oppure',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    ),
-                    Expanded(child: Divider()),
-                  ],
-                ),
-
-                const SizedBox(height: 20),
-
-                // REGISTRATI
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text('Non hai un account?'),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const RegisterPage(),
-                          ),
-                        );
-                      },
-                      child: const Text(
-                        'Registrati',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),

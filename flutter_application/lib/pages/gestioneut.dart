@@ -34,6 +34,9 @@ class _GestioneUtPageState extends State<GestioneUtPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Controllo se l'utente è attivo (ha almeno un ruolo)
+    final bool isActive = user.roles.isNotEmpty;
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
@@ -71,7 +74,7 @@ class _GestioneUtPageState extends State<GestioneUtPage> {
                 children: [
                   Row(
                     children: [
-                      CircleAvatar(
+                      const CircleAvatar(
                         radius: 35,
                         backgroundImage: NetworkImage('https://via.placeholder.com/150'), // Sostituisci con user.imageUrl se presente
                       ),
@@ -84,14 +87,21 @@ class _GestioneUtPageState extends State<GestioneUtPage> {
                           Text(user.email, 
                             style: TextStyle(color: Colors.grey[600])),
                           const SizedBox(height: 4),
+                          // Badge Attivo / Disattivo Dinamico
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Colors.green[50],
+                              color: isActive ? Colors.green[50] : Colors.red[50],
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Text("Attivo", 
-                              style: TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.bold)),
+                            child: Text(
+                              isActive ? "Attivo" : "Disattivo", 
+                              style: TextStyle(
+                                color: isActive ? Colors.green : Colors.red, 
+                                fontSize: 12, 
+                                fontWeight: FontWeight.bold
+                              )
+                            ),
                           ),
                         ],
                       )
@@ -164,7 +174,7 @@ class _GestioneUtPageState extends State<GestioneUtPage> {
                                 ),
                                 child: Row(
                                   children: [
-                                    CircleAvatar(
+                                    const CircleAvatar(
                                       radius: 20,
                                       backgroundImage: NetworkImage(
                                           'https://via.placeholder.com/150'),
@@ -188,8 +198,7 @@ class _GestioneUtPageState extends State<GestioneUtPage> {
                                   ],
                                 ),
                               ),
-                            ))
-                        ,
+                            )),
                   ],
                 ),
               ),
@@ -206,27 +215,37 @@ class _GestioneUtPageState extends State<GestioneUtPage> {
           if (!isSelected) {
             user.roles.add(role);
           } else {
-            if (user.roles.length > 1) {
-              user.roles.remove(role);
-            }
+            // Rimosso il limite: ora puoi deselezionare tutti i ruoli
+            user.roles.remove(role);
           }
         });
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
-          color: isSelected ? cfg.bg : Colors.grey[100],
+          color: isSelected ? cfg.bg : cfg.bg.withOpacity(0.1),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? Colors.transparent : Colors.grey.shade200,
+            color: isSelected ? Colors.transparent : cfg.bg.withOpacity(0.3),
           ),
+          // Ombra super accesa (Glow/Neon)
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: cfg.bg,     // Usa il colore pieno del ruolo
+                    blurRadius: 16,    // Sfocatura alta per l'effetto alone
+                    spreadRadius: 5,   // Espansione fuori dal bottone
+                    offset: const Offset(0, 5), // Leggermente verso il basso
+                  ),
+                ]
+              : [],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               _getIconForRole(role),
-              color: isSelected ? Colors.white : Colors.grey[600],
+              color: isSelected ? Colors.white : cfg.bg.withOpacity(0.6),
             ),
             const SizedBox(height: 4),
             Text(
@@ -234,7 +253,7 @@ class _GestioneUtPageState extends State<GestioneUtPage> {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color: isSelected ? Colors.white : Colors.grey[600],
+                color: isSelected ? Colors.white : cfg.bg.withOpacity(0.6),
               ),
             ),
           ],

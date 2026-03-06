@@ -32,36 +32,36 @@ class RoleConfig {
   const RoleConfig(this.label, this.bg, this.text, this.icon);
 }
 
-// Colori badge simili a Tailwind
+// Colori badge simili a Tailwind - VERSIONI MOLTO ACCESE
 final roleConfig = {
   UserRole.perito: RoleConfig(
     "Perito",
-    Color(0xFFDBEAFE), // bg-blue-100
-    Color(0xFF1E3A8A), // text-blue-800
+    Color(0xFF1D4ED8), // bg-blue-700 - BLU MOLTO ACCESO
+    Color(0xFFFFFFFF), // text-white
     Icons.help_outline,
   ),
   UserRole.automobilista: RoleConfig(
     "Automobilista",
-    Color(0xFFD1FAE5), // bg-green-100
-    Color(0xFF065F46), // text-green-800
+    Color(0xFF15803D), // bg-green-700 - VERDE MOLTO ACCESO
+    Color(0xFFFFFFFF), // text-white
     Icons.person,
   ),
   UserRole.officina: RoleConfig(
     "Officina",
-    Color(0xFFFFEDD5), // bg-orange-100
-    Color(0xFFC2410C), // text-orange-800
+    Color(0xFFC2410C), // bg-orange-700 - ARANCIONE MOLTO ACCESO
+    Color(0xFFFFFFFF), // text-white
     Icons.build,
   ),
   UserRole.soccorso: RoleConfig(
     "Soccorso",
-    Color(0xFFEDE9FE), // bg-purple-100
-    Color(0xFF6B21A8), // text-purple-800
+    Color(0xFF7C3AED), // bg-purple-700 - VIOLA MOLTO ACCESO
+    Color(0xFFFFFFFF), // text-white
     Icons.car_crash,
   ),
   UserRole.admin: RoleConfig(
     "Admin",
-    Color(0xFFFEE2E2), // bg-red-100
-    Color(0xFF991B1B), // text-red-800
+    Color(0xFFB91C1C), // bg-red-700 - ROSSO MOLTO ACCESO
+    Color(0xFFFFFFFF), // text-white
     Icons.security,
   ),
 };
