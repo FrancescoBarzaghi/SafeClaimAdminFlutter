@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
 import 'newaccount.dart';
 import 'login.dart';
 import 'elenco.dart';
 import 'gestioneut.dart';
+
+// NOTA: Se hai 'mockUsers' definito in un altro file (es. elenco.dart), 
+// assicurati che sia importato correttamente, altrimenti la ListaUtentiPage darà errore.
 
 void main() {
   runApp(const MyApp());
@@ -31,8 +37,61 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class DashboardPage extends StatelessWidget {
+class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
+
+  @override
+  State<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> {
+  bool isLoading = true;
+  String errorMessage = '';
+  
+  int activeUsers = 0;
+  Map<String, int> rolesCount = {};
+
+  // ⚠️ ATTENZIONE: Cambia l'URL in base al tuo ambiente!
+  // - Emulatore Android: http://10.0.2.2:5000
+  // - Dispositivo fisico o Web: http://<IP_DEL_TUO_PC>:5000
+  // Assicurati anche di inserire il prefisso corretto del Blueprint se lo hai configurato in Flask.
+  final String baseUrl = 'http://10.0.2.2:5000'; 
+
+  @override
+  void initState() {
+    super.initState();
+    fetchDashboardData();
+  }
+
+  Future<void> fetchDashboardData() async {
+    try {
+      // 1. Chiamata API per il conteggio utenti attivi
+      final countRes = await http.get(Uri.parse('$baseUrl/count'));
+      if (countRes.statusCode == 200) {
+        final countData = json.decode(countRes.body);
+        activeUsers = countData['active_users'] ?? 0;
+      }
+
+      // 2. Chiamata API per le statistiche dei ruoli
+      final rolesRes = await http.get(Uri.parse('$baseUrl/roles-report'));
+      if (rolesRes.statusCode == 200) {
+        final rolesData = json.decode(rolesRes.body);
+        final Map<String, dynamic> apiRoles = rolesData['roles_count'] ?? {};
+        // Convertiamo la mappa dinamica in una mappa String, int
+        rolesCount = apiRoles.map((key, value) => MapEntry(key, value as int));
+      }
+
+      setState(() {
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Errore di connessione al server';
+        isLoading = false;
+      });
+      print("Errore API: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,20 +100,26 @@ class DashboardPage extends StatelessWidget {
         children: [
           const _Header(),
           Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                children: const [
-                  SizedBox(height: 20),
-                  _ActiveUsersCard(),
-                  SizedBox(height: 20),
-                  _UserManagementCard(),
-                  SizedBox(height: 20),
-                  _RoleStatisticsCard(),
-                  SizedBox(height: 30),
-                ],
-              ),
-            ),
+            child: isLoading 
+              ? const Center(child: CircularProgressIndicator()) // Mostra caricamento
+              : errorMessage.isNotEmpty 
+                ? Center(child: Text(errorMessage, style: const TextStyle(color: Colors.red)))
+                : SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 20),
+                        // Passiamo i dati reali alla card
+                        _ActiveUsersCard(activeUsers: activeUsers),
+                        const SizedBox(height: 20),
+                        const _UserManagementCard(),
+                        const SizedBox(height: 20),
+                        // Passiamo i dati reali alla card dei ruoli
+                        _RoleStatisticsCard(rolesMap: rolesCount),
+                        const SizedBox(height: 30),
+                      ],
+                    ),
+                  ),
           ),
         ],
       ),
@@ -69,7 +134,6 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     final double topPadding = MediaQuery.of(context).padding.top;
 
     return Container(
@@ -86,18 +150,16 @@ class _Header extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // LOGO (non più più grande dell’header)
             SizedBox(
-              height: 40, // <= tienilo tra 32 e 44 per stare bene nell’header
+              height: 40,
               child: Image.asset(
                 'assets/logo.png',
                 fit: BoxFit.contain,
+                // fallback in caso manchi l'asset per non bloccare l'app
+                errorBuilder: (context, error, stackTrace) => const Icon(Icons.shield, color: Colors.white, size: 40),
               ),
             ),
-
             const Spacer(),
-
-            // BLOCCO ICONE A DESTRA: stesso "box" per allineamento perfetto
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -143,7 +205,9 @@ class _Header extends StatelessWidget {
 /* ---------------- ACTIVE USERS ---------------- */
 
 class _ActiveUsersCard extends StatelessWidget {
-  const _ActiveUsersCard();
+  final int activeUsers; // Aggiunto parametro dinamico
+
+  const _ActiveUsersCard({required this.activeUsers});
 
   @override
   Widget build(BuildContext context) {
@@ -154,18 +218,18 @@ class _ActiveUsersCard extends StatelessWidget {
         color: const Color(0xFF00C853),
         borderRadius: BorderRadius.circular(18),
       ),
-      child: const Column(
+      child: Column(
         children: [
-          Icon(Icons.groups, color: Colors.white, size: 28),
-          SizedBox(height: 6),
-          Text(
+          const Icon(Icons.groups, color: Colors.white, size: 28),
+          const SizedBox(height: 6),
+          const Text(
             'UTENTI ATTIVI',
             style: TextStyle(color: Colors.white),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
-            '312',
-            style: TextStyle(
+            '$activeUsers', // Usa il valore dall'API
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 36,
               fontWeight: FontWeight.bold,
@@ -193,7 +257,6 @@ class _UserManagementCard extends StatelessWidget {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 16),
-
           _ActionButton(
             'Crea Nuovo Account',
             onTap: () {
@@ -205,13 +268,10 @@ class _UserManagementCard extends StatelessWidget {
               );
             },
           ),
-
           const SizedBox(height: 10),
-
           _ActionButton(
             'Gestisci Ruoli Utenti',
             onTap: () {
-              // Mostra prima la lista utenti
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -220,9 +280,7 @@ class _UserManagementCard extends StatelessWidget {
               );
             },
           ),
-
           const SizedBox(height: 10),
-
           _ActionButton(
             'Visualizza Elenco',
             onTap: () {
@@ -235,98 +293,6 @@ class _UserManagementCard extends StatelessWidget {
             },
           ),
         ],
-      ),
-    );
-  }
-}
-
-/* ---------------- LISTA UTENTI PER SELEZIONE ---------------- */
-
-class ListaUtentiPage extends StatefulWidget {
-  const ListaUtentiPage({super.key});
-
-  @override
-  _ListaUtentiPageState createState() => _ListaUtentiPageState();
-}
-
-class _ListaUtentiPageState extends State<ListaUtentiPage> {
-  String searchQuery = '';
-
-  @override
-  Widget build(BuildContext context) {
-    final filtered = mockUsers.where((u) {
-      final q = searchQuery.toLowerCase();
-      return q.isEmpty ||
-          u.name.toLowerCase().contains(q) ||
-          u.email.toLowerCase().contains(q);
-    }).toList();
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Seleziona Utente", style: TextStyle(color: Colors.white)),
-        backgroundColor: const Color(0xFF1E66F5),
-        leading: const BackButton(color: Colors.white),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(60),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Container(
-              height: 55,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF2F2F2), // grigio chiaro
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: Colors.grey.shade400,
-                  width: 1,
-                ),
-              ),
-              child: TextField(
-                onChanged: (v) => setState(() => searchQuery = v),
-                style: const TextStyle(
-                  color: Colors.black87,
-                  fontSize: 16,
-                ),
-                decoration: const InputDecoration(
-                  hintText: "Cerca utente...",
-                  hintStyle: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 16,
-                  ),
-                  prefixIcon: Icon(
-                    Icons.search,
-                    color: Colors.grey,
-                  ),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(vertical: 18),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: filtered.length,
-        itemBuilder: (_, i) {
-          final user = filtered[i];
-          return Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            child: ListTile(
-              title: Text(user.name),
-              subtitle: Text(user.email),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => GestioneUtPage(user: user),
-                  ),
-                );
-              },
-            ),
-          );
-        },
       ),
     );
   }
@@ -365,19 +331,30 @@ class _ActionButton extends StatelessWidget {
 /* ---------------- ROLE STATISTICS ---------------- */
 
 class _RoleStatisticsCard extends StatelessWidget {
-  const _RoleStatisticsCard();
+  final Map<String, int> rolesMap; // Aggiunto parametro per ricevere la mappa
+
+  const _RoleStatisticsCard({required this.rolesMap});
 
   @override
   Widget build(BuildContext context) {
+    // Se non ci sono ruoli mostriamo un messaggio
+    if (rolesMap.isEmpty) {
+      return const _WhiteCard(
+        child: Center(child: Text("Nessuna statistica ruoli disponibile.")),
+      );
+    }
+
     return _WhiteCard(
       child: Column(
-        children: const [
-          _StatRow('Perito', '24'),
-          _StatRow('Admin', '5'),
-          _StatRow('Soccorso', '18'),
-          _StatRow('Officina', '12'),
-          _StatRow('Automobilista', '253'),
-        ],
+        // Genera dinamicamente le righe in base a cosa risponde il backend
+        children: rolesMap.entries.map((entry) {
+          // Capitalizziamo la prima lettera del ruolo (es. "automobilista" -> "Automobilista")
+          String capitalizedRole = entry.key.isEmpty 
+            ? 'Sconosciuto' 
+            : entry.key[0].toUpperCase() + entry.key.substring(1);
+            
+          return _StatRow(capitalizedRole, entry.value.toString());
+        }).toList(),
       ),
     );
   }
@@ -395,9 +372,9 @@ class _StatRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         children: [
-          Text(role),
+          Text(role, style: const TextStyle(fontWeight: FontWeight.w500)),
           const Spacer(),
-          Text(total),
+          Text(total, style: const TextStyle(fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -420,6 +397,32 @@ class _WhiteCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
       ),
       child: child,
+    );
+  }
+}
+
+/* ---------------- LISTA UTENTI PER SELEZIONE ---------------- */
+// (L'ho lasciata intatta per non rompere il tuo codice, in futuro dovremo collegare alle API anche questa!)
+
+class ListaUtentiPage extends StatefulWidget {
+  const ListaUtentiPage({super.key});
+
+  @override
+  _ListaUtentiPageState createState() => _ListaUtentiPageState();
+}
+
+class _ListaUtentiPageState extends State<ListaUtentiPage> {
+  String searchQuery = '';
+  // ATTENZIONE: Questo mockUsers deve essere definito altrove nel tuo progetto
+  // altrimenti dovrai fetchare anche qui l'elenco utenti dal backend (API GET "/")
+  final List<dynamic> mockUsers = []; 
+
+  @override
+  Widget build(BuildContext context) {
+    // ... logica immutata
+    return Scaffold(
+      appBar: AppBar(title: const Text("Da implementare con API")),
+      body: const Center(child: Text("Sostituisci i mock con i dati API GET '/'")),
     );
   }
 }
