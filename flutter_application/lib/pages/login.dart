@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'home.dart'; // dashboard
 
 class LoginPage extends StatefulWidget {
@@ -14,6 +15,75 @@ class _LoginPageState extends State<LoginPage> {
 
   bool rememberMe = false;
   bool hidePassword = true;
+  bool isLoading = false;
+
+  // FUNZIONE DI LOGIN SIMULATA (SENZA SERVER)
+  Future<void> _loginAdmin() async {
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    // 1. Controllo campi vuoti
+    if (email.isEmpty || password.isEmpty) {
+      _mostraErrore("Inserisci email e password");
+      return;
+    }
+
+    setState(() {
+      isLoading = true; // Mostriamo la rotellina di caricamento
+    });
+
+    try {
+      // 2. Simuliamo il tempo di attesa di un server vero (1.5 secondi)
+      await Future.delayed(const Duration(milliseconds: 1500));
+
+      // 3. Controllo manuale delle credenziali (le stesse del tuo auth.py)
+      if (email == "admin@safeclaim.it" && password == "admin123") {
+        
+        // Login effettuato con successo! Creiamo un token finto.
+        final String fintoToken = "token_simulato_admin_999";
+        
+        final prefs = await SharedPreferences.getInstance();
+
+        // Controllo della spunta "Ricordami"
+        if (rememberMe) {
+          await prefs.setString('admin_token', fintoToken);
+        } else {
+          await prefs.remove('admin_token');
+        }
+
+        if (!mounted) return;
+
+        // Naviga alla Dashboard
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const DashboardPage(),
+          ),
+        );
+      } else {
+        // Credenziali sbagliate
+        _mostraErrore("Credenziali non valide. Riprova.");
+      }
+    } catch (e) {
+      _mostraErrore("Si è verificato un errore imprevisto.");
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false; // Fermiamo la rotellina
+        });
+      }
+    }
+  }
+
+  void _mostraErrore(String messaggio) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(messaggio),
+        backgroundColor: Colors.redAccent,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +108,6 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-
                 const Text(
                   'Accedi',
                   style: TextStyle(
@@ -60,7 +129,7 @@ class _LoginPageState extends State<LoginPage> {
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
                     labelText: 'Email',
-                    hintText: 'esempio@email.com',
+                    hintText: 'admin@safeclaim.it',
                     prefixIcon: const Icon(Icons.email_outlined),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -80,9 +149,7 @@ class _LoginPageState extends State<LoginPage> {
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        hidePassword
-                            ? Icons.visibility_off
-                            : Icons.visibility,
+                        hidePassword ? Icons.visibility_off : Icons.visibility,
                       ),
                       onPressed: () {
                         setState(() {
@@ -98,7 +165,7 @@ class _LoginPageState extends State<LoginPage> {
 
                 const SizedBox(height: 12),
 
-                // RICORDAMI + PASSWORD DIMENTICATA
+                // RICORDAMI E PASSWORD DIMENTICATA
                 Row(
                   children: [
                     Checkbox(
@@ -126,29 +193,29 @@ class _LoginPageState extends State<LoginPage> {
                   height: 50,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          const Color.fromARGB(255, 17, 76, 204),
+                      backgroundColor: const Color.fromARGB(255, 17, 76, 204),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              const DashboardPage(),
-                        ),
-                      );
-                    },
-                    child: const Text(
-                      'Accedi',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
+                    onPressed: isLoading ? null : _loginAdmin,
+                    child: isLoading
+                        ? const SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2.5,
+                            ),
+                          )
+                        : const Text(
+                            'Accedi',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
                   ),
                 ),
               ],
