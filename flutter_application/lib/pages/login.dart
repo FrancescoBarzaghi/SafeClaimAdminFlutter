@@ -72,7 +72,7 @@ class _LoginPageState extends State<LoginPage> {
         _mostraErrore(errorMessage);
       }
     } catch (e) {
-      _mostraErrore("Errore di connessione. Verifica la tua connessione internet.");
+      _mostraErrore("$e Errore di connessione. Verifica la tua connessione internet.");
     } finally {
       if (mounted) {
         setState(() {

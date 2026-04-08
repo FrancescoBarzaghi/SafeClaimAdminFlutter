@@ -24,13 +24,19 @@ class ApiService {
   }
 
   /// POST request
-  Future<http.Response> post(String endpoint, Map<String, dynamic> body, {String? token}) {
-    return http.post(
+  Future<http.Response> post(String endpoint, Map<String, dynamic> body, {String? token}) async {
+  try {
+    final response = await http.post(
       Uri.parse('$_baseUrl$endpoint'),
       headers: _headers(token: token),
       body: jsonEncode(body),
-    );
+    ).timeout(const Duration(seconds: 10));
+    return response;
+  } catch (e) {
+    print('API ERROR [$endpoint]: $e');
+    rethrow;
   }
+}
 
   /// GET request
   Future<http.Response> get(String endpoint, {String? token}) {
