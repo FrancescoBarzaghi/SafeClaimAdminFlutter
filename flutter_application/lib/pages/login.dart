@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'home.dart'; // dashboard
 
 class LoginPage extends StatefulWidget {
@@ -16,8 +18,9 @@ class _LoginPageState extends State<LoginPage> {
   bool rememberMe = false;
   bool hidePassword = true;
   bool isLoading = false;
+  String apiUrl = 'https://solid-giggle-v6pv66wgprx5fw6r4-5000.app.github.dev/api/auth';
 
-  // FUNZIONE DI LOGIN SIMULATA (SENZA SERVER)
+  // FUNZIONE DI LOGIN TRAMITE API
   Future<void> _loginAdmin() async {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
@@ -33,20 +36,23 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      // 2. Simuliamo il tempo di attesa di un server vero (1.5 secondi)
-      await Future.delayed(const Duration(milliseconds: 1500));
+      // 2. Effettua la richiesta POST all'API
+      final response = await http.post(
+        Uri.parse('$apiUrl/admin/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'password': password}),
+      );
 
-      // 3. Controllo manuale delle credenziali (le stesse del tuo auth.py)
-      if (email == "admin@safeclaim.it" && password == "admin123") {
-        
-        // Login effettuato con successo! Creiamo un token finto.
-        final String fintoToken = "token_simulato_admin_999";
-        
+      if (response.statusCode == 200) {
+        // Login riuscito
+        final data = jsonDecode(response.body);
+        final token = data['token']; // Assumiamo che l'API restituisca un token
+
         final prefs = await SharedPreferences.getInstance();
 
         // Controllo della spunta "Ricordami"
         if (rememberMe) {
-          await prefs.setString('admin_token', fintoToken);
+          await prefs.setString('admin_token', token);
         } else {
           await prefs.remove('admin_token');
         }
@@ -61,11 +67,13 @@ class _LoginPageState extends State<LoginPage> {
           ),
         );
       } else {
-        // Credenziali sbagliate
-        _mostraErrore("Credenziali non valide. Riprova.");
+        // Credenziali sbagliate o errore del server
+        final data = jsonDecode(response.body);
+        final errorMessage = data['message'] ?? 'Credenziali non valide. Riprova.';
+        _mostraErrore(errorMessage);
       }
     } catch (e) {
-      _mostraErrore("Si è verificato un errore imprevisto.");
+      _mostraErrore("Errore di connessione. Verifica la tua connessione internet.");
     } finally {
       if (mounted) {
         setState(() {
