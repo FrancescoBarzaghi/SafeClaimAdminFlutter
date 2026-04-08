@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../services/api_service.dart';
 import 'home.dart'; // dashboard
 
 class LoginPage extends StatefulWidget {
@@ -18,7 +18,7 @@ class _LoginPageState extends State<LoginPage> {
   bool rememberMe = false;
   bool hidePassword = true;
   bool isLoading = false;
-  String apiUrl = 'https://solid-giggle-v6pv66wgprx5fw6r4-5000.app.github.dev/api/auth';
+  final ApiService _api = ApiService();
 
   // FUNZIONE DI LOGIN TRAMITE API
   Future<void> _loginAdmin() async {
@@ -37,11 +37,10 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       // 2. Effettua la richiesta POST all'API
-      final response = await http.post(
-        Uri.parse('$apiUrl/admin/login'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'password': password}),
-      );
+      final response = await _api.post('/auth/login', {
+        'email': email,
+        'password': password,
+      });
 
       if (response.statusCode == 200) {
         // Login riuscito

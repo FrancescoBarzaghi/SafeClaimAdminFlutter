@@ -14,7 +14,6 @@ class SafeClaimApp extends StatelessWidget {
   Future<bool> _checkLoginStatus() async {
     final prefs = await SharedPreferences.getInstance();
     final String? token = prefs.getString('admin_token');
-    
     // Se il token esiste, restituisce true (l'utente è già loggato)
     return token != null;
   }

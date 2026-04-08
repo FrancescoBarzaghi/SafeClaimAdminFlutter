@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import '../services/api_service.dart';
 import 'newaccount.dart';
 import 'login.dart';
 import 'elenco.dart';
@@ -142,8 +144,37 @@ class _Header extends StatelessWidget {
 
 /* ---------------- ACTIVE USERS ---------------- */
 
-class _ActiveUsersCard extends StatelessWidget {
+class _ActiveUsersCard extends StatefulWidget {
   const _ActiveUsersCard();
+
+  @override
+  State<_ActiveUsersCard> createState() => _ActiveUsersCardState();
+}
+
+class _ActiveUsersCardState extends State<_ActiveUsersCard> {
+  final ApiService _api = ApiService();
+  int? _totaleUtenti;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUtenti();
+  }
+
+  Future<void> _loadUtenti() async {
+    try {
+      final token = await _api.getToken();
+      final response = await _api.get('/gestioneUtenti/utenti/count', token: token);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (mounted) {
+          setState(() => _totaleUtenti = data['totale_utenti']);
+        }
+      }
+    } catch (_) {
+      // Errore di connessione, resta null
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -154,23 +185,32 @@ class _ActiveUsersCard extends StatelessWidget {
         color: const Color(0xFF00C853),
         borderRadius: BorderRadius.circular(18),
       ),
-      child: const Column(
+      child: Column(
         children: [
-          Icon(Icons.groups, color: Colors.white, size: 28),
-          SizedBox(height: 6),
-          Text(
+          const Icon(Icons.groups, color: Colors.white, size: 28),
+          const SizedBox(height: 6),
+          const Text(
             'UTENTI ATTIVI',
             style: TextStyle(color: Colors.white),
           ),
-          SizedBox(height: 8),
-          Text(
-            '312',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 36,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          const SizedBox(height: 8),
+          _totaleUtenti != null
+              ? Text(
+                  '$_totaleUtenti',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                  ),
+                )
+              : const SizedBox(
+                  height: 36,
+                  width: 36,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 3,
+                  ),
+                ),
         ],
       ),
     );
