@@ -43,7 +43,9 @@ class _LoginPageState extends State<LoginPage> {
         _mostraErrore("Credenziali non valide. Riprova.");
       }
     } catch (e) {
-      _mostraErrore("Errore durante l'accesso: $e");
+      // MODIFICA QUI: Rimuoviamo la dicitura "Exception: " per mostrare un messaggio pulito all'utente
+      // Così se non è admin vedrà esattamente: "Accesso negato: non hai i permessi di amministratore."
+      _mostraErrore(e.toString().replaceAll('Exception: ', ''));
     } finally {
       if (mounted) {
         setState(() {

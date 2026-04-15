@@ -27,17 +27,54 @@ class AuthService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        final String accessToken = data['access_token'];
         
-        // Salviamo SIA l'access_token CHE il refresh_token
-        await _secureStorage.write(key: 'jwt_token', value: data['access_token']);
-        await _secureStorage.write(key: 'refresh_token', value: data['refresh_token']);
+        // --- CONTROLLO RUOLO ADMIN ---
+        if (!_hasAdminRole(accessToken)) {
+          // Lanciamo un'eccezione che verrà catturata da login.dart
+          throw Exception('Accesso negato: non hai i permessi di amministratore.');
+        }
+
+        // Salviamo SIA l'access_token CHE il refresh_token (solo se è admin)
+        await _secureStorage.write(key: 'jwt_token', value: accessToken);
+        if (data['refresh_token'] != null) {
+          await _secureStorage.write(key: 'refresh_token', value: data['refresh_token']);
+        }
         return true;
       } else {
         print('Errore Login Keycloak: ${response.body}');
         return false;
       }
     } catch (e) {
+      // Se l'errore è la nostra eccezione sui permessi, la passiamo alla pagina di login
+      if (e.toString().contains('Accesso negato')) {
+        rethrow;
+      }
       print('Errore di connessione: $e');
+      return false;
+    }
+  }
+
+  /// Estrae il payload del JWT e verifica la presenza del ruolo "admin"
+  bool _hasAdminRole(String token) {
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) return false;
+
+      final payload = _decodeBase64(parts[1]);
+      final Map<String, dynamic> payloadMap = jsonDecode(payload);
+
+      // Cerca il ruolo 'admin' in realm_access -> roles
+      if (payloadMap.containsKey('realm_access')) {
+        final realmAccess = payloadMap['realm_access'];
+        if (realmAccess is Map<String, dynamic> && realmAccess.containsKey('roles')) {
+          final List<dynamic> roles = realmAccess['roles'];
+          return roles.contains('admin');
+        }
+      }
+      return false;
+    } catch (e) {
+      print('Errore durante la decodifica dei ruoli: $e');
       return false;
     }
   }
@@ -64,19 +101,17 @@ class AuthService {
         final data = jsonDecode(response.body);
         await _secureStorage.write(key: 'jwt_token', value: data['access_token']);
         
-        // Keycloak potrebbe fornire un nuovo refresh token
         if (data['refresh_token'] != null) {
           await _secureStorage.write(key: 'refresh_token', value: data['refresh_token']);
         }
         return true;
       } else {
-        // Il refresh token è scaduto o invalido
         await logout();
         return false;
       }
     } catch (e) {
       print('Errore Refresh Token: $e');
-      return false; // Errore di rete, non sloggiamo ma riproveremo
+      return false; 
     }
   }
 
@@ -100,14 +135,13 @@ class AuthService {
       final expireDate = DateTime.fromMillisecondsSinceEpoch(exp * 1000);
       final now = DateTime.now();
 
-      // Ritorna true se mancano meno di 60 secondi alla scadenza
       return expireDate.difference(now).inSeconds < 60;
     } catch (e) {
       return true;
     }
   }
 
-  /// Helper per decodificare il base64 del JWT senza pacchetti esterni
+  /// Helper per decodificare il base64 del JWT
   String _decodeBase64(String str) {
     String output = str.replaceAll('-', '+').replaceAll('_', '/');
     switch (output.length % 4) {
