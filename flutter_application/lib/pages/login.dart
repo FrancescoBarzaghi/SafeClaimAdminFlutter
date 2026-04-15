@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
-import '../services/api_service.dart';
-import 'home.dart'; // dashboard
+import '../services/auth_service.dart';
+import 'home.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -12,71 +10,44 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-
-  bool rememberMe = false;
-  bool hidePassword = true;
   bool isLoading = false;
-  final ApiService _api = ApiService();
+  final AuthService _authService = AuthService();
 
-  // FUNZIONE DI LOGIN TRAMITE API
-  Future<void> _loginAdmin() async {
-    final email = emailController.text.trim();
-    final password = passwordController.text.trim();
+  // Controller per recuperare il testo inserito dall'utente
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
-    // 1. Controllo campi vuoti
+  Future<void> _handleLogin() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
     if (email.isEmpty || password.isEmpty) {
-      _mostraErrore("Inserisci email e password");
+      _mostraErrore("Per favore, inserisci sia l'email che la password.");
       return;
     }
 
     setState(() {
-      isLoading = true; // Mostriamo la rotellina di caricamento
+      isLoading = true;
     });
 
     try {
-      // 2. Effettua la richiesta POST all'API
-      final response = await _api.post('/auth/login', {
-        'email': email,
-        'password': password,
-      });
+      // Chiamata al nuovo metodo login nel tuo AuthService
+      bool success = await _authService.login(email, password);
 
-      if (response.statusCode == 200) {
-        // Login riuscito
-        final data = jsonDecode(response.body);
-        final token = data['token']; // Assumiamo che l'API restituisca un token
-
-        final prefs = await SharedPreferences.getInstance();
-
-        // Controllo della spunta "Ricordami"
-        if (rememberMe) {
-          await prefs.setString('admin_token', token);
-        } else {
-          await prefs.remove('admin_token');
-        }
-
-        if (!mounted) return;
-
-        // Naviga alla Dashboard
+      if (success && mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (context) => const DashboardPage(),
-          ),
+          MaterialPageRoute(builder: (context) => const DashboardPage()),
         );
       } else {
-        // Credenziali sbagliate o errore del server
-        final data = jsonDecode(response.body);
-        final errorMessage = data['message'] ?? 'Credenziali non valide. Riprova.';
-        _mostraErrore(errorMessage);
+        _mostraErrore("Credenziali non valide. Riprova.");
       }
     } catch (e) {
-      _mostraErrore("$e Errore di connessione. Verifica la tua connessione internet.");
+      _mostraErrore("Errore durante l'accesso: $e");
     } finally {
       if (mounted) {
         setState(() {
-          isLoading = false; // Fermiamo la rotellina
+          isLoading = false;
         });
       }
     }
@@ -97,10 +68,11 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 19, 145, 218),
       body: Center(
-        child: SingleChildScrollView(
+        child: SingleChildScrollView( // Aggiunto per evitare overflow con la tastiera
           child: Container(
             width: 380,
-            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 40),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(18),
@@ -116,88 +88,49 @@ class _LoginPageState extends State<LoginPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Text(
-                  'Accedi',
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  'SafeClaim Admin',
+                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 8),
-
+                const SizedBox(height: 10),
                 const Text(
-                  'Inserisci le tue credenziali',
+                  'Inserisci le tue credenziali per accedere',
+                  textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 14, color: Colors.grey),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 30),
 
-                // EMAIL
+                // CAMPO EMAIL
                 TextField(
-                  controller: emailController,
+                  controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
-                    labelText: 'Email',
-                    hintText: 'admin@safeclaim.it',
-                    prefixIcon: const Icon(Icons.email_outlined),
+                    labelText: 'Email o Username',
+                    prefixIcon: const Icon(Icons.person_outline),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 20),
 
-                // PASSWORD
+                // CAMPO PASSWORD
                 TextField(
-                  controller: passwordController,
-                  obscureText: hidePassword,
+                  controller: _passwordController,
+                  obscureText: true,
                   decoration: InputDecoration(
                     labelText: 'Password',
-                    hintText: '••••••••',
                     prefixIcon: const Icon(Icons.lock_outline),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        hidePassword ? Icons.visibility_off : Icons.visibility,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          hidePassword = !hidePassword;
-                        });
-                      },
-                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                 ),
+                const SizedBox(height: 30),
 
-                const SizedBox(height: 12),
-
-                // RICORDAMI E PASSWORD DIMENTICATA
-                Row(
-                  children: [
-                    Checkbox(
-                      value: rememberMe,
-                      onChanged: (value) {
-                        setState(() {
-                          rememberMe = value!;
-                        });
-                      },
-                    ),
-                    const Text('Ricordami'),
-                    const Spacer(),
-                    TextButton(
-                      onPressed: () {},
-                      child: const Text('Password dimenticata?'),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 24),
-
-                // BOTTONE LOGIN
+                // BOTTONE ACCEDI
                 SizedBox(
                   width: double.infinity,
-                  height: 50,
+                  height: 55,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color.fromARGB(255, 17, 76, 204),
@@ -205,18 +138,11 @@ class _LoginPageState extends State<LoginPage> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    onPressed: isLoading ? null : _loginAdmin,
+                    onPressed: isLoading ? null : _handleLogin,
                     child: isLoading
-                        ? const SizedBox(
-                            height: 24,
-                            width: 24,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2.5,
-                            ),
-                          )
+                        ? const CircularProgressIndicator(color: Colors.white)
                         : const Text(
-                            'Accedi',
+                            'ACCEDI ORA',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,

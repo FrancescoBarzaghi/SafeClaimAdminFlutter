@@ -71,7 +71,6 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     final double topPadding = MediaQuery.of(context).padding.top;
 
     return Container(
@@ -88,18 +87,14 @@ class _Header extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // LOGO (non più più grande dell’header)
             SizedBox(
-              height: 40, // <= tienilo tra 32 e 44 per stare bene nell’header
+              height: 40,
               child: Image.asset(
                 'assets/logo.png',
                 fit: BoxFit.contain,
               ),
             ),
-
             const Spacer(),
-
-            // BLOCCO ICONE A DESTRA: stesso "box" per allineamento perfetto
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -163,16 +158,18 @@ class _ActiveUsersCardState extends State<_ActiveUsersCard> {
 
   Future<void> _loadUtenti() async {
     try {
-      final token = await _api.getToken();
-      final response = await _api.get('/gestioneUtenti/utenti/count', token: token);
+      // Modifica fondamentale: rimosso il parametro 'token'
+      // Ora ApiService gestisce il Bearer token internamente
+      final response = await _api.get('/gestioneUtenti/utenti/count');
+      
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (mounted) {
           setState(() => _totaleUtenti = data['totale_utenti']);
         }
       }
-    } catch (_) {
-      // Errore di connessione, resta null
+    } catch (e) {
+      debugPrint('Errore caricamento utenti: $e');
     }
   }
 
@@ -233,44 +230,32 @@ class _UserManagementCard extends StatelessWidget {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 16),
-
           _ActionButton(
             'Crea Nuovo Account',
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const NewAccountPage(),
-                ),
+                MaterialPageRoute(builder: (_) => const NewAccountPage()),
               );
             },
           ),
-
           const SizedBox(height: 10),
-
           _ActionButton(
             'Gestisci Ruoli Utenti',
             onTap: () {
-              // Mostra prima la lista utenti
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const ListaUtentiPage(),
-                ),
+                MaterialPageRoute(builder: (_) => const ListaUtentiPage()),
               );
             },
           ),
-
           const SizedBox(height: 10),
-
           _ActionButton(
             'Visualizza Elenco',
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const ElencoPage(),
-                ),
+                MaterialPageRoute(builder: (_) => const ElencoPage()),
               );
             },
           ),
@@ -280,7 +265,7 @@ class _UserManagementCard extends StatelessWidget {
   }
 }
 
-/* ---------------- LISTA UTENTI PER SELEZIONE ---------------- */
+/* ---------------- LISTA UTENTI (MOCKUP) ---------------- */
 
 class ListaUtentiPage extends StatefulWidget {
   const ListaUtentiPage({super.key});
@@ -294,6 +279,7 @@ class _ListaUtentiPageState extends State<ListaUtentiPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Nota: mockUsers deve essere definito nel tuo progetto (es. in elenco.dart o simile)
     final filtered = mockUsers.where((u) {
       final q = searchQuery.toLowerCase();
       return q.isEmpty ||
@@ -313,29 +299,16 @@ class _ListaUtentiPageState extends State<ListaUtentiPage> {
             child: Container(
               height: 55,
               decoration: BoxDecoration(
-                color: const Color(0xFFF2F2F2), // grigio chiaro
+                color: const Color(0xFFF2F2F2),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: Colors.grey.shade400,
-                  width: 1,
-                ),
+                border: Border.all(color: Colors.grey.shade400),
               ),
               child: TextField(
                 onChanged: (v) => setState(() => searchQuery = v),
-                style: const TextStyle(
-                  color: Colors.black87,
-                  fontSize: 16,
-                ),
+                style: const TextStyle(color: Colors.black87, fontSize: 16),
                 decoration: const InputDecoration(
                   hintText: "Cerca utente...",
-                  hintStyle: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 16,
-                  ),
-                  prefixIcon: Icon(
-                    Icons.search,
-                    color: Colors.grey,
-                  ),
+                  prefixIcon: Icon(Icons.search, color: Colors.grey),
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.symmetric(vertical: 18),
                 ),
@@ -359,9 +332,7 @@ class _ListaUtentiPageState extends State<ListaUtentiPage> {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) => GestioneUtPage(user: user),
-                  ),
+                  MaterialPageRoute(builder: (_) => GestioneUtPage(user: user)),
                 );
               },
             ),
@@ -372,12 +343,11 @@ class _ListaUtentiPageState extends State<ListaUtentiPage> {
   }
 }
 
-/* ---------------- ACTION BUTTON ---------------- */
+/* ---------------- ACTION BUTTON & STATS ---------------- */
 
 class _ActionButton extends StatelessWidget {
   final String label;
   final VoidCallback? onTap;
-
   const _ActionButton(this.label, {this.onTap});
 
   @override
@@ -389,24 +359,16 @@ class _ActionButton extends StatelessWidget {
         onPressed: onTap,
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF1E66F5),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(25),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
         ),
-        child: Text(
-          label,
-          style: const TextStyle(color: Colors.white),
-        ),
+        child: Text(label, style: const TextStyle(color: Colors.white)),
       ),
     );
   }
 }
 
-/* ---------------- ROLE STATISTICS ---------------- */
-
 class _RoleStatisticsCard extends StatelessWidget {
   const _RoleStatisticsCard();
-
   @override
   Widget build(BuildContext context) {
     return _WhiteCard(
@@ -426,9 +388,7 @@ class _RoleStatisticsCard extends StatelessWidget {
 class _StatRow extends StatelessWidget {
   final String role;
   final String total;
-
   const _StatRow(this.role, this.total);
-
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -444,13 +404,9 @@ class _StatRow extends StatelessWidget {
   }
 }
 
-/* ---------------- WHITE CARD ---------------- */
-
 class _WhiteCard extends StatelessWidget {
   final Widget child;
-
   const _WhiteCard({required this.child});
-
   @override
   Widget build(BuildContext context) {
     return Container(
