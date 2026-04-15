@@ -147,9 +147,12 @@ class _ActiveUsersCard extends StatefulWidget {
   State<_ActiveUsersCard> createState() => _ActiveUsersCardState();
 }
 
+enum LoadingStatus { loading, success, error }
+
 class _ActiveUsersCardState extends State<_ActiveUsersCard> {
   final ApiService _api = ApiService();
   int? _totaleUtenti;
+  LoadingStatus _status = LoadingStatus.loading;
 
   @override
   void initState() {
@@ -158,17 +161,23 @@ class _ActiveUsersCardState extends State<_ActiveUsersCard> {
   }
 
   Future<void> _loadUtenti() async {
+    setState(() => _status = LoadingStatus.loading);
     try {
       final response = await _api.get('/gestioneUtenti/utenti/count');
       
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (mounted) {
-          setState(() => _totaleUtenti = data['totale_utenti']);
+          setState(() {
+            _totaleUtenti = data['totale_utenti'];
+            _status = LoadingStatus.success;
+          });
         }
+      } else {
+        setState(() => _status = LoadingStatus.error);
       }
     } catch (e) {
-      debugPrint('Errore caricamento utenti: $e');
+      if (mounted) setState(() => _status = LoadingStatus.error);
     }
   }
 
@@ -178,35 +187,30 @@ class _ActiveUsersCardState extends State<_ActiveUsersCard> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 24),
       decoration: BoxDecoration(
-        color: const Color(0xFF00C853),
+        color: _status == LoadingStatus.error ? Colors.orange : const Color(0xFF00C853),
         borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
         children: [
-          const Icon(Icons.groups, color: Colors.white, size: 28),
+          Icon(_status == LoadingStatus.error ? Icons.warning : Icons.groups, color: Colors.white, size: 28),
           const SizedBox(height: 6),
-          const Text(
-            'UTENTI ATTIVI',
-            style: TextStyle(color: Colors.white),
-          ),
+          const Text('UTENTI ATTIVI', style: TextStyle(color: Colors.white)),
           const SizedBox(height: 8),
-          _totaleUtenti != null
-              ? Text(
-                  '$_totaleUtenti',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 36,
-                    fontWeight: FontWeight.bold,
-                  ),
-                )
-              : const SizedBox(
-                  height: 36,
-                  width: 36,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 3,
-                  ),
-                ),
+          if (_status == LoadingStatus.loading)
+            const SizedBox(
+              height: 36, width: 36,
+              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3),
+            )
+          else if (_status == LoadingStatus.error)
+            TextButton(
+              onPressed: _loadUtenti,
+              child: const Text('Riprova', style: TextStyle(color: Colors.white, decoration: TextDecoration.underline)),
+            )
+          else
+            Text(
+              '$_totaleUtenti',
+              style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold),
+            ),
         ],
       ),
     );
