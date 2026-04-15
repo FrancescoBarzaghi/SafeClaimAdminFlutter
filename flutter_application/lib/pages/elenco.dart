@@ -1,112 +1,7 @@
 import 'package:flutter/material.dart';
 import 'gestioneut.dart';
-
-/// =====================
-/// MODELLI E CONFIG
-/// =====================
-
-enum UserRole { perito, automobilista, officina, soccorso, admin }
-
-class AppUser {
-  final String id;
-  final String name;
-  final String email;
-  final String phone;
-  final List<UserRole> roles;
-
-  AppUser({
-    required this.id,
-    required this.name,
-    required this.email,
-    required this.phone,
-    required this.roles,
-  });
-}
-
-class RoleConfig {
-  final String label;
-  final Color bg;
-  final Color text;
-  final IconData icon;
-
-  const RoleConfig(this.label, this.bg, this.text, this.icon);
-}
-
-// Colori badge simili a Tailwind - VERSIONI MOLTO ACCESE
-final roleConfig = {
-  UserRole.perito: RoleConfig(
-    "Perito",
-    Color(0xFF1D4ED8), // bg-blue-700 - BLU MOLTO ACCESO
-    Color(0xFFFFFFFF), // text-white
-    Icons.help_outline,
-  ),
-  UserRole.automobilista: RoleConfig(
-    "Automobilista",
-    Color(0xFF15803D), // bg-green-700 - VERDE MOLTO ACCESO
-    Color(0xFFFFFFFF), // text-white
-    Icons.person,
-  ),
-  UserRole.officina: RoleConfig(
-    "Officina",
-    Color(0xFFC2410C), // bg-orange-700 - ARANCIONE MOLTO ACCESO
-    Color(0xFFFFFFFF), // text-white
-    Icons.build,
-  ),
-  UserRole.soccorso: RoleConfig(
-    "Soccorso",
-    Color(0xFF7C3AED), // bg-purple-700 - VIOLA MOLTO ACCESO
-    Color(0xFFFFFFFF), // text-white
-    Icons.car_crash,
-  ),
-  UserRole.admin: RoleConfig(
-    "Admin",
-    Color(0xFFB91C1C), // bg-red-700 - ROSSO MOLTO ACCESO
-    Color(0xFFFFFFFF), // text-white
-    Icons.security,
-  ),
-};
-
-/// =====================
-/// MOCK DATA
-/// =====================
-
-final mockUsers = <AppUser>[
-  AppUser(
-    id: "1",
-    name: "Marco Rossi",
-    email: "marco.rossi@email.it",
-    phone: "+39 333 1234567",
-    roles: [UserRole.perito],
-  ),
-  AppUser(
-    id: "2",
-    name: "Laura Bianchi",
-    email: "laura.bianchi@email.it",
-    phone: "+39 333 2345678",
-    roles: [UserRole.automobilista],
-  ),
-  AppUser(
-    id: "3",
-    name: "Officina Auto Sport",
-    email: "info@autosport.it",
-    phone: "+39 333 3456789",
-    roles: [UserRole.officina, UserRole.soccorso],
-  ),
-  AppUser(
-    id: "4",
-    name: "Giuseppe Verdi",
-    email: "giuseppe.verdi@email.it",
-    phone: "+39 333 4567890",
-    roles: [UserRole.soccorso],
-  ),
-  AppUser(
-    id: "5",
-    name: "Admin Sistema",
-    email: "admin@sistema.it",
-    phone: "+39 333 5678901",
-    roles: [UserRole.admin],
-  ),
-];
+import '../services/api_service.dart';
+import '../models/user_model.dart';
 
 /// =====================
 /// PAGINA ELENCO
@@ -120,11 +15,90 @@ class ElencoPage extends StatefulWidget {
 }
 
 class _ElencoPageState extends State<ElencoPage> {
+  final ApiService _apiService = ApiService();
+  
   String search = "";
   UserRole? selectedRole;
+  List<AppUser> allUsers = [];
+  bool isLoading = false;
+  String? errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUsers();
+  }
+
+  /// Carica gli utenti dall'API
+  Future<void> _loadUsers() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
+    try {
+      final token = await _apiService.getToken();
+      print('🔐 Token disponibile: ${token != null ? "Si" : "No"}');
+      
+      final usersData = await _apiService.getUtenti(token: token);
+      
+      if (mounted) {
+        setState(() {
+          allUsers = usersData
+              .map((u) => AppUser.fromApiResponse(u))
+              .toList();
+          isLoading = false;
+        });
+        print('✅ ${allUsers.length} utenti caricati');
+      }
+    } catch (e) {
+      final errorMsg = 'Errore nel caricamento degli utenti: $e';
+      print('❌ $errorMsg');
+      
+      if (mounted) {
+        setState(() {
+          errorMessage = errorMsg;
+          isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage!), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  /// Ricerca utenti dal API
+  Future<void> _searchUsers(String query) async {
+    if (query.isEmpty) {
+      _loadUsers();
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
+    try {
+      final token = await _apiService.getToken();
+      final usersData = await _apiService.cercaUtenti(query, token: token);
+      
+      setState(() {
+        allUsers = usersData
+            .map((u) => AppUser.fromApiResponse(u))
+            .toList();
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Errore nella ricerca: $e';
+        isLoading = false;
+      });
+    }
+  }
   
   List<AppUser> get filteredUsers {
-    return mockUsers.where((u) {
+    return allUsers.where((u) {
       final s = search.toLowerCase();
       final matchesSearch =
           u.name.toLowerCase().contains(s) ||
@@ -152,30 +126,107 @@ class _ElencoPageState extends State<ElencoPage> {
             Text("Lista Utenti", style: TextStyle(color: Colors.white)),
           ],
         ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _searchBar(),
-            const SizedBox(height: 16),
-            _roleFilter(),
-            const SizedBox(height: 12),
-            Text(
-              "Mostrando ${filteredUsers.length} di ${mockUsers.length} utenti",
-              style: TextStyle(color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 12),
-            ...filteredUsers.map(
-              (u) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _userCard(u),
+        actions: [
+          if (isLoading)
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  strokeWidth: 2,
+                ),
               ),
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.refresh, color: Colors.white),
+              onPressed: _loadUsers,
             ),
-          ],
-        ),
+        ],
       ),
+      body: isLoading && allUsers.isEmpty
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : errorMessage != null && allUsers.isEmpty
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                        const SizedBox(height: 16),
+                        Text(
+                          errorMessage!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.red, fontSize: 14),
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton.icon(
+                          onPressed: _loadUsers,
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Riprova'),
+                        ),
+                        const SizedBox(height: 12),
+                        ElevatedButton.icon(
+                          onPressed: () async {
+                            final isConnected = await _apiService.testConnection();
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(isConnected ? '✅ API Raggiungibile' : '❌ API Non Raggiungibile'),
+                                  backgroundColor: isConnected ? Colors.green : Colors.red,
+                                ),
+                              );
+                            }
+                          },
+                          icon: const Icon(Icons.link),
+                          label: const Text('Test Connessione'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _searchBar(),
+                      const SizedBox(height: 16),
+                      _roleFilter(),
+                      const SizedBox(height: 12),
+                      Text(
+                        "Mostrando ${filteredUsers.length} di ${allUsers.length} utenti",
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                      const SizedBox(height: 12),
+                      if (filteredUsers.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 32.0),
+                          child: Center(
+                            child: Text(
+                              'Nessun utente trovato',
+                              style: TextStyle(color: Colors.grey[600]),
+                            ),
+                          ),
+                        )
+                      else
+                        ...filteredUsers.map(
+                          (u) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: _userCard(u),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
     );
   }
 
@@ -195,7 +246,10 @@ class _ElencoPageState extends State<ElencoPage> {
         ),
       ),
       child: TextField(
-        onChanged: (v) => setState(() => search = v),
+        onChanged: (v) {
+          setState(() => search = v);
+          _searchUsers(v);
+        },
         style: const TextStyle(
           color: Colors.black87,
           fontSize: 16,

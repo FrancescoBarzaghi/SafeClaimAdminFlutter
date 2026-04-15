@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'elenco.dart';
+import '../models/user_model.dart';
+import '../services/api_service.dart';
 
 class GestioneUtPage extends StatefulWidget {
   final AppUser user;
@@ -11,20 +12,47 @@ class GestioneUtPage extends StatefulWidget {
 }
 
 class _GestioneUtPageState extends State<GestioneUtPage> {
+  final ApiService _apiService = ApiService();
+  
   late AppUser user;
   String searchQuery = "";
+  List<AppUser> allUsers = [];
+  bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
     user = widget.user;
+    _loadUsers();
+  }
+
+  /// Carica gli utenti dall'API per la ricerca
+  Future<void> _loadUsers() async {
+    setState(() => isLoading = true);
+    try {
+      final token = await _apiService.getToken();
+      final usersData = await _apiService.getUtenti(token: token);
+      
+      if (mounted) {
+        setState(() {
+          allUsers = usersData
+              .map((u) => AppUser.fromApiResponse(u))
+              .toList();
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
+    }
   }
 
   List<AppUser> get filteredUsers {
     if (searchQuery.isEmpty) {
-      return mockUsers;
+      return allUsers;
     }
-    return mockUsers.where((u) {
+    return allUsers.where((u) {
       final s = searchQuery.toLowerCase();
       return u.name.toLowerCase().contains(s) ||
           u.email.toLowerCase().contains(s) ||
@@ -267,9 +295,10 @@ class _GestioneUtPageState extends State<GestioneUtPage> {
       case UserRole.admin: return Icons.shield_outlined;
       case UserRole.automobilista: return Icons.directions_car_outlined;
       case UserRole.officina: return Icons.build_outlined;
-      case UserRole.soccorso: return Icons.local_shipping_outlined;
+      case UserRole.soccorso: return Icons.local_taxi;
       case UserRole.perito: return Icons.assignment_outlined;
-      default: return Icons.person_outline;
+      case UserRole.assicuratore: return Icons.verified_outlined;
+      case UserRole.azienda: return Icons.business_outlined;
     }
   }
 }

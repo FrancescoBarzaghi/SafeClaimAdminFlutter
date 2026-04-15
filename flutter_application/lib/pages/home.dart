@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import '../services/api_service.dart';
-import 'newaccount.dart';
-import 'login.dart';
-import 'elenco.dart';
-import 'gestioneut.dart';
+import './newaccount.dart';
+import './login.dart';
+import './elenco.dart';
+import './gestioneut.dart';
+import '../models/user_model.dart';
 
 void main() {
   runApp(const MyApp());
@@ -290,17 +291,51 @@ class ListaUtentiPage extends StatefulWidget {
 }
 
 class _ListaUtentiPageState extends State<ListaUtentiPage> {
+  final ApiService _apiService = ApiService();
+  
   String searchQuery = '';
+  List<AppUser> allUsers = [];
+  bool isLoading = false;
 
   @override
-  Widget build(BuildContext context) {
-    final filtered = mockUsers.where((u) {
+  void initState() {
+    super.initState();
+    _loadUsers();
+  }
+
+  /// Carica gli utenti dall'API
+  Future<void> _loadUsers() async {
+    setState(() => isLoading = true);
+    try {
+      final token = await _apiService.getToken();
+      final usersData = await _apiService.getUtenti(token: token);
+      
+      if (mounted) {
+        setState(() {
+          allUsers = usersData
+              .map((u) => AppUser.fromApiResponse(u))
+              .toList();
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
+    }
+  }
+
+  List<AppUser> get filtered {
+    return allUsers.where((u) {
       final q = searchQuery.toLowerCase();
       return q.isEmpty ||
           u.name.toLowerCase().contains(q) ||
           u.email.toLowerCase().contains(q);
     }).toList();
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Seleziona Utente", style: TextStyle(color: Colors.white)),
@@ -344,30 +379,53 @@ class _ListaUtentiPageState extends State<ListaUtentiPage> {
           ),
         ),
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: filtered.length,
-        itemBuilder: (_, i) {
-          final user = filtered[i];
-          return Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            child: ListTile(
-              title: Text(user.name),
-              subtitle: Text(user.email),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => GestioneUtPage(user: user),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : allUsers.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.people_outline, size: 48, color: Colors.grey),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Nessun utente trovato',
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                    ],
                   ),
-                );
-              },
-            ),
-          );
-        },
-      ),
+                )
+              : filtered.isEmpty
+                  ? Center(
+                      child: Text(
+                        'Nessun risultato',
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: filtered.length,
+                      itemBuilder: (_, i) {
+                        final user = filtered[i];
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          child: ListTile(
+                            title: Text(user.name),
+                            subtitle: Text(user.email),
+                            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => GestioneUtPage(user: user),
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    ),
     );
   }
 }
