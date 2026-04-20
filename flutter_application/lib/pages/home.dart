@@ -53,7 +53,7 @@ class DashboardPage extends StatelessWidget {
                   SizedBox(height: 20),
                   _UserManagementCard(),
                   SizedBox(height: 20),
-                  _RoleStatisticsCard(),
+                  _RoleStatisticsCard(), // Ora è dinamico
                   SizedBox(height: 30),
                 ],
               ),
@@ -290,7 +290,6 @@ class _ListaUtentiPageState extends State<ListaUtentiPage> {
     _loadUsers();
   }
 
-  /// Carica gli utenti dall'API
   Future<void> _loadUsers() async {
     setState(() => isLoading = true);
     try {
@@ -407,7 +406,7 @@ class _ListaUtentiPageState extends State<ListaUtentiPage> {
   }
 }
 
-/* ---------------- ACTION BUTTON & STATS ---------------- */
+/* ---------------- ACTION BUTTON ---------------- */
 
 class _ActionButton extends StatelessWidget {
   final String label;
@@ -431,20 +430,83 @@ class _ActionButton extends StatelessWidget {
   }
 }
 
-class _RoleStatisticsCard extends StatelessWidget {
+/* ---------------- ROLE STATISTICS (MODIFICATA - DINAMICA) ---------------- */
+
+class _RoleStatisticsCard extends StatefulWidget {
   const _RoleStatisticsCard();
+
+  @override
+  State<_RoleStatisticsCard> createState() => _RoleStatisticsCardState();
+}
+
+class _RoleStatisticsCardState extends State<_RoleStatisticsCard> {
+  final ApiService _api = ApiService();
+  Map<String, dynamic> _stats = {};
+  LoadingStatus _status = LoadingStatus.loading;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStats();
+  }
+
+  Future<void> _loadStats() async {
+    if (!mounted) return;
+    setState(() => _status = LoadingStatus.loading);
+    try {
+      // Chiamata all'API in homeAdmin.py
+      final response = await _api.get('/home-admin/stats-ruoli');
+      
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        if (mounted) {
+          setState(() {
+            _stats = decoded['data'] ?? {};
+            _status = LoadingStatus.success;
+          });
+        }
+      } else {
+        if (mounted) setState(() => _status = LoadingStatus.error);
+      }
+    } catch (e) {
+      if (mounted) setState(() => _status = LoadingStatus.error);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return _WhiteCard(
-      child: Column(
-        children: const [
-          _StatRow('Perito', '24'),
-          _StatRow('Admin', '5'),
-          _StatRow('Soccorso', '18'),
-          _StatRow('Officina', '12'),
-          _StatRow('Automobilista', '253'),
-        ],
-      ),
+      child: _buildContent(),
+    );
+  }
+
+  Widget _buildContent() {
+    if (_status == LoadingStatus.loading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(20.0),
+          child: CircularProgressIndicator(color: Color(0xFF1E66F5)),
+        ),
+      );
+    }
+
+    if (_status == LoadingStatus.error) {
+      return Center(
+        child: TextButton(
+          onPressed: _loadStats,
+          child: const Text('Errore dati. Riprova', style: TextStyle(color: Colors.red)),
+        ),
+      );
+    }
+
+    if (_stats.isEmpty) {
+      return const Center(child: Text('Nessun utente nel sistema'));
+    }
+
+    return Column(
+      children: _stats.entries.map((entry) {
+        return _StatRow(entry.key, entry.value.toString());
+      }).toList(),
     );
   }
 }
@@ -459,9 +521,9 @@ class _StatRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         children: [
-          Text(role),
+          Text(role, style: const TextStyle(fontWeight: FontWeight.w500)),
           const Spacer(),
-          Text(total),
+          Text(total, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1E66F5))),
         ],
       ),
     );
