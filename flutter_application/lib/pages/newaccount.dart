@@ -1,5 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import '../app/theme.dart';
+import '../services/api_service.dart';
 
 class NewAccountPage extends StatefulWidget {
   const NewAccountPage({super.key});
@@ -11,71 +12,124 @@ class NewAccountPage extends StatefulWidget {
 class _NewAccountPageState extends State<NewAccountPage> {
   final _formKey = GlobalKey<FormState>();
 
-  final TextEditingController usernameController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController usernameController =
+      TextEditingController();
+
+  final TextEditingController emailController =
+      TextEditingController();
+
+  final TextEditingController passwordController =
+      TextEditingController();
 
   bool obscurePassword = true;
-  String searchQuery = "";
 
   bool admin = false;
   bool soccorso = false;
   bool officina = true;
   bool perito = false;
 
+  bool loading = false;
+  
+  final ApiService _apiService = ApiService();
+
+  /// CREAZIONE ACCOUNT - Usa ApiService con endpoint HTTPS
+  Future<void> createAccount() async {
+    setState(() {
+      loading = true;
+    });
+
+    try {
+      final response = await _apiService.post(
+        '/create_account',
+        {
+          "username": usernameController.text.trim(),
+          "email": emailController.text.trim(),
+          "password": passwordController.text.trim(),
+          "roles": {
+            "admin": admin,
+            "soccorso": soccorso,
+            "officina": officina,
+            "perito": perito,
+          }
+        },
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(data["message"] ??
+                  "Account creato correttamente"),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+
+        /// RESET CAMPI
+        usernameController.clear();
+        emailController.clear();
+        passwordController.clear();
+
+        setState(() {
+          admin = false;
+          soccorso = false;
+          officina = true;
+          perito = false;
+        });
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(data["message"] ??
+                  "Errore creazione account"),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Errore connessione server: $e"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      print('Errore createAccount: $e');
+    }
+
+    setState(() {
+      loading = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: SafeClaimColors.background,
 
-      /// APP BAR
       appBar: AppBar(
         elevation: 0,
         backgroundColor: SafeClaimColors.primary,
         foregroundColor: Colors.white,
         leading: const BackButton(),
-        titleSpacing: 0,
-        title: const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Creazione Account",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 2),
-            Text(
-              "Creazione Account e Utenti",
-              style: TextStyle(fontSize: 12, color: Colors.white70),
-            ),
-          ],
-        ),
+        title: const Text("Creazione Account"),
       ),
 
-      /// BODY
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment:
+                CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 10),
 
-              /// TITOLO
-              Row(
-                children: const [
-                  Icon(Icons.shield_outlined, color: SafeClaimColors.primary),
-                  SizedBox(width: 8),
-                  Text(
-                    "Crea Nuovo Account",
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
+              const SizedBox(height: 20),
 
-              const SizedBox(height: 30),
-
-              /// USERNAME
               _label("Username"),
               _textField(
                 hint: "es. mario.rossi",
@@ -84,13 +138,11 @@ class _NewAccountPageState extends State<NewAccountPage> {
 
               const SizedBox(height: 20),
 
-              /// EMAIL
               _label("Email"),
               _textField(hint: "email@esempio.it", controller: emailController),
 
               const SizedBox(height: 20),
 
-              /// PASSWORD
               _label("Password"),
               _textField(
                 hint: "Inserisci password",
@@ -100,46 +152,63 @@ class _NewAccountPageState extends State<NewAccountPage> {
 
               const SizedBox(height: 30),
 
-              /// RUOLI
               _label("Ruoli"),
-              const SizedBox(height: 12),
+
+              const SizedBox(height: 10),
 
               _roleTile("Admin", admin, (v) {
                 setState(() => admin = v);
               }),
+
               _roleTile("Soccorso", soccorso, (v) {
                 setState(() => soccorso = v);
               }),
+
               _roleTile("Officina", officina, (v) {
                 setState(() => officina = v);
               }),
+
               _roleTile("Perito", perito, (v) {
                 setState(() => perito = v);
               }),
 
               const SizedBox(height: 30),
 
-              /// BOTTONE CREA
               SizedBox(
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      debugPrint("Username: ${usernameController.text}");
-                      debugPrint("Email: ${emailController.text}");
-                      debugPrint("Password: ${passwordController.text}");
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(elevation: 3),
-                  child: const Text(
-                    "Crea Account",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                  onPressed: loading
+                      ? null
+                      : () {
+                          if (_formKey.currentState!
+                              .validate()) {
+                            createAccount();
+                          }
+                        },
+
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        const Color(0xFF2563EB),
+                    shape: RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(12),
                     ),
                   ),
+
+                  child: loading
+                      ? const CircularProgressIndicator(
+                          color: Colors.white,
+                        )
+                      : const Text(
+                          "Crea Account",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight:
+                                FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
                 ),
               ),
             ],
@@ -149,30 +218,21 @@ class _NewAccountPageState extends State<NewAccountPage> {
     );
   }
 
-  /// LABEL CON *
+  /// LABEL
   Widget _label(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
-      child: RichText(
-        text: TextSpan(
-          text: text,
-          style: const TextStyle(
-            color: SafeClaimColors.foreground,
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
-          ),
-          children: const [
-            TextSpan(
-              text: " *",
-              style: TextStyle(color: SafeClaimColors.danger),
-            ),
-          ],
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
         ),
       ),
     );
   }
 
-  /// TEXT FIELD MODERNO
+  /// TEXT FIELD
   Widget _textField({
     required String hint,
     required TextEditingController controller,
@@ -180,43 +240,28 @@ class _NewAccountPageState extends State<NewAccountPage> {
   }) {
     return TextFormField(
       controller: controller,
-      obscureText: isPassword ? obscurePassword : false,
+
+      obscureText:
+          isPassword ? obscurePassword : false,
+
       validator: (value) {
-        if (value == null || value.trim().isEmpty) {
+        if (value == null ||
+            value.trim().isEmpty) {
           return "Campo obbligatorio";
         }
+
         return null;
       },
+
       decoration: InputDecoration(
         hintText: hint,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
-        ),
+
+        filled: true,
+        fillColor: Colors.grey.shade100,
 
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: SafeClaimColors.primaryLight),
-        ),
-
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: SafeClaimColors.primaryLight),
-        ),
-
-        focusedBorder: const OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(12)),
-          borderSide: BorderSide(color: SafeClaimColors.primary, width: 2),
-        ),
-
-        errorBorder: const OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(12)),
-          borderSide: BorderSide(color: SafeClaimColors.danger, width: 2),
-        ),
-
-        focusedErrorBorder: const OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(12)),
-          borderSide: BorderSide(color: SafeClaimColors.danger, width: 2),
+          borderRadius:
+              BorderRadius.circular(12),
         ),
 
         suffixIcon: isPassword
@@ -226,7 +271,8 @@ class _NewAccountPageState extends State<NewAccountPage> {
                 ),
                 onPressed: () {
                   setState(() {
-                    obscurePassword = !obscurePassword;
+                    obscurePassword =
+                        !obscurePassword;
                   });
                 },
               )
@@ -235,22 +281,33 @@ class _NewAccountPageState extends State<NewAccountPage> {
     );
   }
 
-  /// CHECKBOX RUOLI MODERNE
-  Widget _roleTile(String label, bool value, Function(bool) onChanged) {
+  /// CHECKBOX
+  Widget _roleTile(
+    String label,
+    bool value,
+    Function(bool) onChanged,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
+
       decoration: BoxDecoration(
-        color: SafeClaimColors.card,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: SafeClaimColors.primaryLight),
+        color: Colors.white,
+        borderRadius:
+            BorderRadius.circular(12),
       ),
+
       child: CheckboxListTile(
         value: value,
-        onChanged: (v) => onChanged(v ?? false),
-        title: Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
-        activeColor: SafeClaimColors.primary,
-        controlAffinity: ListTileControlAffinity.leading,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+        onChanged: (v) =>
+            onChanged(v ?? false),
+
+        title: Text(label),
+
+        activeColor:
+            const Color(0xFF2563EB),
+
+        controlAffinity:
+            ListTileControlAffinity.leading,
       ),
     );
   }

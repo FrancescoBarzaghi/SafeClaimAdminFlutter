@@ -49,6 +49,12 @@ class _SafeClaimAppState extends State<SafeClaimApp> {
   void _startSessionMonitor() {
     // Controlla ogni 30 secondi se il token è valido
     _sessionTimer = Timer.periodic(const Duration(seconds: 30), (timer) async {
+      // Verifichiamo che il widget sia ancora montato prima di procedere
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      
       // 1. Verifichiamo se c'è un token salvato. Se non c'è (es. siamo alla pagina login), non fa nulla.
       final token = await _storage.read(key: 'jwt_token');
       if (token == null) return;
@@ -74,10 +80,12 @@ class _SafeClaimAppState extends State<SafeClaimApp> {
     await _authService.logout();
 
     // Usa la GlobalKey per riportare l'utente alla LoginPage distruggendo la cronologia delle pagine
-    navigatorKey.currentState?.pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => const LoginPage()),
-      (Route<dynamic> route) => false,
-    );
+    if (navigatorKey.currentState != null && navigatorKey.currentState!.mounted) {
+      navigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const LoginPage()),
+        (Route<dynamic> route) => false,
+      );
+    }
   }
 
   @override
