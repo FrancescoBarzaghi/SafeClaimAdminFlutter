@@ -273,31 +273,6 @@ class _GestioneUtPageState extends State<GestioneUtPage> {
                   ),
 
                   const SizedBox(height: 20),
-<<<<<<< HEAD
-
-                  // Bottone Elimina
-                  SizedBox(
-                    width: double.infinity,
-                    child: TextButton.icon(
-                      style: TextButton.styleFrom(
-                        backgroundColor: SafeClaimColors.dangerSoft,
-                        foregroundColor: SafeClaimColors.danger,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      onPressed: () {
-                        // Logica eliminazione
-                      },
-                      icon: const Icon(Icons.delete_outline),
-                      label: const Text(
-                        "Elimina Utente",
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-=======
                   
                   // Bottoni Azioni
                   Row(
@@ -347,7 +322,6 @@ class _GestioneUtPageState extends State<GestioneUtPage> {
                       )
                     ],
                   )
->>>>>>> ed2da7d (copletato gestione utenti)
                 ],
               ),
             ),
