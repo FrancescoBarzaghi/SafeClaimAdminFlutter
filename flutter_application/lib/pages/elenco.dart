@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-<<<<<<< HEAD
-=======
 import '../app/theme.dart';
 import 'gestioneut.dart';
->>>>>>> 365c10e (redesign grafico)
 import '../services/api_service.dart';
 import '../models/user_model.dart';
 import '../widgets/safeclaim_ui.dart';
