@@ -164,6 +164,33 @@ class ApiService {
     }
   }
 
+  /// Aggiorna i ruoli di un utente
+  Future<bool> updateUserRoles(String userId, List<String> roles, {String? token}) async {
+    try {
+      final endpoint = '/gestioneUtenti/utenti/$userId/ruoli';
+      final body = {
+        'ruoli': roles,
+      };
+      
+      print('📡 POST $_baseUrl$endpoint with roles: $roles');
+      
+      // Prova con POST se PUT non funziona per CORS
+      final response = await post(endpoint, body);
+      
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        print('✅ Ruoli aggiornati con successo');
+        return true;
+      } else {
+        print('❌ Errore nell\'aggiornamento dei ruoli: ${response.statusCode}');
+        print('Response body: ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      print('❌ Exception updateUserRoles: $e');
+      return false;
+    }
+  }
+
   /// Testa la connessione all'API
   Future<bool> testConnection() async {
     try {

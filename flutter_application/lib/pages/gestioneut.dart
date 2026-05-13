@@ -20,6 +20,7 @@ class _GestioneUtPageState extends State<GestioneUtPage> {
   String searchQuery = "";
   List<AppUser> allUsers = [];
   bool isLoading = false;
+  bool isSaving = false;
 
   @override
   void initState() {
@@ -60,6 +61,59 @@ class _GestioneUtPageState extends State<GestioneUtPage> {
     }).toList();
   }
 
+  /// Salva i ruoli dell'utente nel database
+  Future<void> _saveUserRoles() async {
+    setState(() => isSaving = true);
+    try {
+      final rolesStrings = user.roles.map((role) {
+        switch (role) {
+          case UserRole.perito: return 'perito';
+          case UserRole.automobilista: return 'automobilista';
+          case UserRole.officina: return 'officina';
+          case UserRole.soccorso: return 'soccorso';
+          case UserRole.admin: return 'admin';
+          case UserRole.assicuratore: return 'assicuratore';
+          case UserRole.azienda: return 'azienda';
+        }
+      }).toList();
+
+      final success = await _apiService.updateUserRoles(user.id, rolesStrings);
+      
+      if (mounted) {
+        setState(() => isSaving = false);
+        
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('✅ Ruoli aggiornati con successo'),
+              backgroundColor: Colors.green[600],
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('❌ Errore nell\'aggiornamento dei ruoli'),
+              backgroundColor: Colors.red[600],
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Errore: $e'),
+            backgroundColor: Colors.red[600],
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Controllo se l'utente è attivo (ha almeno un ruolo)
@@ -89,6 +143,35 @@ class _GestioneUtPageState extends State<GestioneUtPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Barra di Ricerca
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: TextField(
+                onChanged: (value) => setState(() => searchQuery = value),
+                decoration: InputDecoration(
+                  hintText: "Cerca utente per nome, email o telefono...",
+                  prefixIcon: const Icon(Icons.search, color: Color(0xFF1E66F5)),
+                  suffixIcon: searchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () => setState(() => searchQuery = ""),
+                        )
+                      : null,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Colors.grey),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Color(0xFF1E66F5), width: 2),
+                  ),
+                ),
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Text(
@@ -190,6 +273,7 @@ class _GestioneUtPageState extends State<GestioneUtPage> {
                   ),
 
                   const SizedBox(height: 20),
+<<<<<<< HEAD
 
                   // Bottone Elimina
                   SizedBox(
@@ -213,9 +297,61 @@ class _GestioneUtPageState extends State<GestioneUtPage> {
                       ),
                     ),
                   ),
+=======
+                  
+                  // Bottoni Azioni
+                  Row(
+                    children: [
+                      // Bottone Salva
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF1E66F5),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))
+                          ),
+                          onPressed: isSaving ? null : _saveUserRoles,
+                          icon: isSaving 
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              )
+                            : const Icon(Icons.save),
+                          label: Text(
+                            isSaving ? "Salvataggio..." : "Salva Ruoli",
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Bottone Elimina
+                      Expanded(
+                        child: TextButton.icon(
+                          style: TextButton.styleFrom(
+                            backgroundColor: Colors.red[50],
+                            foregroundColor: Colors.red,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))
+                          ),
+                          onPressed: () {
+                            // Logica eliminazione
+                          },
+                          icon: const Icon(Icons.delete_outline),
+                          label: const Text("Elimina", style: TextStyle(fontWeight: FontWeight.bold)),
+                        ),
+                      )
+                    ],
+                  )
+>>>>>>> ed2da7d (copletato gestione utenti)
                 ],
               ),
             ),
+            const SizedBox(height: 24),
             if (searchQuery.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.all(16.0),
