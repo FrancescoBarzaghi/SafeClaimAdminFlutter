@@ -2,8 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import 'app/theme.dart';
 import 'pages/login.dart';
-import 'pages/home.dart'; // Assicurati che il percorso sia corretto per la tua Dashboard
 import 'services/auth_service.dart';
 
 // CHIAVE GLOBALE PER LA NAVIGAZIONE (Permette di cambiare pagina anche fuori dai Widget)
@@ -28,12 +28,12 @@ class _SafeClaimAppState extends State<SafeClaimApp> {
   @override
   void initState() {
     super.initState();
-    
+
     // --- MODIFICA AGGIUNTA ---
     // Pulizia immediata: ogni volta che l'app viene riavviata da zero,
     // cancelliamo i vecchi token. In questo modo partiamo sempre da una situazione pulita
     // e il timer inizierà a fare i controlli solo dopo che avrai fatto il nuovo login.
-    _authService.logout(); 
+    _authService.logout();
     // -------------------------
 
     _startSessionMonitor();
@@ -55,16 +55,16 @@ class _SafeClaimAppState extends State<SafeClaimApp> {
 
       // 2. Chiediamo ad AuthService se il token sta per scadere (es. < 60 secondi)
       bool isExpiring = await _authService.isTokenExpiringSoon();
-      
+
       if (isExpiring) {
-        print("Il token sta per scadere. Tento il refresh...");
+        debugPrint("Il token sta per scadere. Tento il refresh...");
         bool refreshed = await _authService.refreshToken();
-        
+
         if (!refreshed) {
-          print("Refresh fallito. Forzo il logout.");
+          debugPrint("Refresh fallito. Forzo il logout.");
           _forceLogout();
         } else {
-          print("Token aggiornato con successo in background!");
+          debugPrint("Token aggiornato con successo in background!");
         }
       }
     });
@@ -72,7 +72,7 @@ class _SafeClaimAppState extends State<SafeClaimApp> {
 
   void _forceLogout() async {
     await _authService.logout();
-    
+
     // Usa la GlobalKey per riportare l'utente alla LoginPage distruggendo la cronologia delle pagine
     navigatorKey.currentState?.pushAndRemoveUntil(
       MaterialPageRoute(builder: (context) => const LoginPage()),
@@ -86,10 +86,9 @@ class _SafeClaimAppState extends State<SafeClaimApp> {
       navigatorKey: navigatorKey, // PASSA LA CHIAVE AL MATERIAL APP
       debugShowCheckedModeBanner: false,
       title: 'SafeClaim Admin',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 19, 145, 218)),
-        useMaterial3: true,
-      ),
+      theme: lightTheme(),
+      darkTheme: darkTheme(),
+      themeMode: ThemeMode.light,
       // Ora l'app mostrerà sempre la LoginPage all'avvio
       home: const LoginPage(),
     );

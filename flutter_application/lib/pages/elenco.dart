@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
+=======
+import '../app/theme.dart';
+import 'gestioneut.dart';
+>>>>>>> 365c10e (redesign grafico)
 import '../services/api_service.dart';
 import '../models/user_model.dart';
+import '../widgets/safeclaim_ui.dart';
 
 /// =====================
 /// PAGINA ELENCO
@@ -15,7 +21,7 @@ class ElencoPage extends StatefulWidget {
 
 class _ElencoPageState extends State<ElencoPage> {
   final ApiService _apiService = ApiService();
-  
+
   String search = "";
   UserRole? selectedRole;
   List<AppUser> allUsers = [];
@@ -37,30 +43,31 @@ class _ElencoPageState extends State<ElencoPage> {
 
     try {
       final token = await _apiService.getToken();
-      print('🔐 Token disponibile: ${token != null ? "Si" : "No"}');
-      
+      debugPrint('Token disponibile: ${token != null ? "Si" : "No"}');
+
       final usersData = await _apiService.getUtenti(token: token);
-      
+
       if (mounted) {
         setState(() {
-          allUsers = usersData
-              .map((u) => AppUser.fromApiResponse(u))
-              .toList();
+          allUsers = usersData.map((u) => AppUser.fromApiResponse(u)).toList();
           isLoading = false;
         });
-        print('✅ ${allUsers.length} utenti caricati');
+        debugPrint('${allUsers.length} utenti caricati');
       }
     } catch (e) {
       final errorMsg = 'Errore nel caricamento degli utenti: $e';
-      print('❌ $errorMsg');
-      
+      debugPrint(errorMsg);
+
       if (mounted) {
         setState(() {
           errorMessage = errorMsg;
           isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage!), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text(errorMessage!),
+            backgroundColor: SafeClaimColors.danger,
+          ),
         );
       }
     }
@@ -81,11 +88,9 @@ class _ElencoPageState extends State<ElencoPage> {
     try {
       final token = await _apiService.getToken();
       final usersData = await _apiService.cercaUtenti(query, token: token);
-      
+
       setState(() {
-        allUsers = usersData
-            .map((u) => AppUser.fromApiResponse(u))
-            .toList();
+        allUsers = usersData.map((u) => AppUser.fromApiResponse(u)).toList();
         isLoading = false;
       });
     } catch (e) {
@@ -95,7 +100,7 @@ class _ElencoPageState extends State<ElencoPage> {
       });
     }
   }
-  
+
   List<AppUser> get filteredUsers {
     return allUsers.where((u) {
       final s = search.toLowerCase();
@@ -114,9 +119,9 @@ class _ElencoPageState extends State<ElencoPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB), // bg-gray-50
+      backgroundColor: SafeClaimColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF2563EB), // bg-blue-600
+        backgroundColor: SafeClaimColors.primary,
         leading: const BackButton(color: Colors.white),
         title: Row(
           children: const [
@@ -146,86 +151,101 @@ class _ElencoPageState extends State<ElencoPage> {
         ],
       ),
       body: isLoading && allUsers.isEmpty
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
+          ? const Center(child: CircularProgressIndicator())
           : errorMessage != null && allUsers.isEmpty
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                        const SizedBox(height: 16),
-                        Text(
-                          errorMessage!,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: Colors.red, fontSize: 14),
-                        ),
-                        const SizedBox(height: 24),
-                        ElevatedButton.icon(
-                          onPressed: _loadUsers,
-                          icon: const Icon(Icons.refresh),
-                          label: const Text('Riprova'),
-                        ),
-                        const SizedBox(height: 12),
-                        ElevatedButton.icon(
-                          onPressed: () async {
-                            final isConnected = await _apiService.testConnection();
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(isConnected ? '✅ API Raggiungibile' : '❌ API Non Raggiungibile'),
-                                  backgroundColor: isConnected ? Colors.green : Colors.red,
-                                ),
-                              );
-                            }
-                          },
-                          icon: const Icon(Icons.link),
-                          label: const Text('Test Connessione'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange,
-                          ),
-                        ),
-                      ],
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: SafeClaimColors.danger,
                     ),
-                  ),
-                )
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _searchBar(),
-                      const SizedBox(height: 16),
-                      _roleFilter(),
-                      const SizedBox(height: 12),
-                      Text(
-                        "Mostrando ${filteredUsers.length} di ${allUsers.length} utenti",
-                        style: TextStyle(color: Colors.grey[600]),
+                    const SizedBox(height: 16),
+                    Text(
+                      errorMessage!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: SafeClaimColors.danger,
+                        fontSize: 14,
                       ),
-                      const SizedBox(height: 12),
-                      if (filteredUsers.isEmpty)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 32.0),
-                          child: Center(
-                            child: Text(
-                              'Nessun utente trovato',
-                              style: TextStyle(color: Colors.grey[600]),
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      onPressed: _loadUsers,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Riprova'),
+                    ),
+                    const SizedBox(height: 12),
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        final isConnected = await _apiService.testConnection();
+                        if (!context.mounted) {
+                          return;
+                        }
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              isConnected
+                                  ? 'API Raggiungibile'
+                                  : 'API Non Raggiungibile',
                             ),
+                            backgroundColor: isConnected
+                                ? SafeClaimColors.primary
+                                : SafeClaimColors.danger,
                           ),
-                        )
-                      else
-                        ...filteredUsers.map(
-                          (u) => Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: _userCard(u),
+                        );
+                      },
+                      icon: const Icon(Icons.link),
+                      label: const Text('Test Connessione'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: SafeClaimColors.warning,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _searchBar(),
+                  const SizedBox(height: 16),
+                  _roleFilter(),
+                  const SizedBox(height: 12),
+                  Text(
+                    "Mostrando ${filteredUsers.length} di ${allUsers.length} utenti",
+                    style: const TextStyle(color: SafeClaimColors.textMuted),
+                  ),
+                  const SizedBox(height: 12),
+                  if (filteredUsers.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 32.0),
+                      child: Center(
+                        child: Text(
+                          'Nessun utente trovato',
+                          style: const TextStyle(
+                            color: SafeClaimColors.textMuted,
                           ),
                         ),
-                    ],
-                  ),
-                ),
+                      ),
+                    )
+                  else
+                    ...filteredUsers.map(
+                      (u) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _userCard(u),
+                      ),
+                    ),
+                ],
+              ),
+            ),
     );
   }
 
@@ -237,32 +257,20 @@ class _ElencoPageState extends State<ElencoPage> {
     return Container(
       height: 55,
       decoration: BoxDecoration(
-        color: const Color(0xFFF2F2F2), // grigio chiaro
+        color: SafeClaimColors.primaryLightest,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.grey.shade400,
-          width: 1,
-        ),
+        border: Border.all(color: SafeClaimColors.primaryLight, width: 1),
       ),
       child: TextField(
         onChanged: (v) {
           setState(() => search = v);
           _searchUsers(v);
         },
-        style: const TextStyle(
-          color: Colors.black87,
-          fontSize: 16,
-        ),
+        style: const TextStyle(color: SafeClaimColors.foreground, fontSize: 16),
         decoration: const InputDecoration(
           hintText: "Cerca utente...",
-          hintStyle: TextStyle(
-            color: Colors.grey,
-            fontSize: 16,
-          ),
-          prefixIcon: Icon(
-            Icons.search,
-            color: Colors.grey,
-          ),
+          hintStyle: TextStyle(color: SafeClaimColors.textMuted, fontSize: 16),
+          prefixIcon: Icon(Icons.search, color: SafeClaimColors.textMuted),
           border: InputBorder.none,
           contentPadding: EdgeInsets.symmetric(vertical: 18),
         ),
@@ -276,7 +284,7 @@ class _ElencoPageState extends State<ElencoPage> {
 
   Widget _roleFilter() {
     return Card(
-      color: Colors.white,
+      color: SafeClaimColors.card,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -295,27 +303,28 @@ class _ElencoPageState extends State<ElencoPage> {
                   label: const Text("Tutti"),
                   selected: selectedRole == null,
                   onSelected: (_) => setState(() => selectedRole = null),
-                  selectedColor: const Color(0xFF2563EB),
-                  backgroundColor: Colors.white,
+                  selectedColor: SafeClaimColors.primary,
+                  backgroundColor: SafeClaimColors.card,
                   labelStyle: TextStyle(
-                      color: selectedRole == null ? Colors.white : Colors.black),
+                    color: selectedRole == null
+                        ? Colors.white
+                        : SafeClaimColors.textStrong,
+                  ),
                 ),
-                ...UserRole.values.map(
-                  (r) {
-                    final cfg = roleConfig[r]!;
-                    final selected = selectedRole == r;
-                    return ChoiceChip(
-                      label: Text(cfg.label),
-                      selected: selected,
-                      onSelected: (_) => setState(() => selectedRole = r),
-                      selectedColor: cfg.bg,
-                      backgroundColor: Colors.white,
-                      labelStyle: TextStyle(
-                        color: selected ? cfg.text : Colors.black,
-                      ),
-                    );
-                  },
-                ),
+                ...UserRole.values.map((r) {
+                  final cfg = roleConfig[r]!;
+                  final selected = selectedRole == r;
+                  return ChoiceChip(
+                    label: Text(cfg.label),
+                    selected: selected,
+                    onSelected: (_) => setState(() => selectedRole = r),
+                    selectedColor: cfg.bg,
+                    backgroundColor: SafeClaimColors.card,
+                    labelStyle: TextStyle(
+                      color: selected ? cfg.text : SafeClaimColors.textStrong,
+                    ),
+                  );
+                }),
               ],
             ),
           ],
@@ -329,6 +338,7 @@ class _ElencoPageState extends State<ElencoPage> {
   /// =====================
 
   Widget _userCard(AppUser user) {
+<<<<<<< HEAD
     return Card(
       elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -391,6 +401,115 @@ class _ElencoPageState extends State<ElencoPage> {
                     }).toList(),
                   ),
                 ],
+=======
+    final mainRole = user.roles.first;
+    final otherRoles = user.roles.length > 1
+        ? user.roles.sublist(1)
+        : <UserRole>[];
+    return InkWell(
+      onTap: () async {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => GestioneUtPage(user: user)),
+        );
+        setState(() {}); // Aggiorna i ruoli al ritorno
+      },
+      child: Card(
+        elevation: 1,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CircleAvatar(
+                radius: 24,
+                backgroundColor: SafeClaimColors.primaryLightest,
+                child: const Icon(
+                  Icons.person,
+                  color: SafeClaimColors.textMuted,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            user.name,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                        if (otherRoles.isNotEmpty)
+                          PopupMenuButton<UserRole>(
+                            icon: const Icon(Icons.more_vert, size: 20),
+                            itemBuilder: (context) => [
+                              PopupMenuItem<UserRole>(
+                                enabled: false,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      "Altri ruoli:",
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: SafeClaimColors.textMuted,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    ...otherRoles.map((role) {
+                                      return Container(
+                                        margin: const EdgeInsets.only(
+                                          bottom: 4,
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
+                                        ),
+                                        child: SafeClaimRoleBadge(role: role),
+                                      );
+                                    }),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      user.email,
+                      style: const TextStyle(
+                        color: SafeClaimColors.textMuted,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      user.phone,
+                      style: const TextStyle(
+                        color: SafeClaimColors.textMuted,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      child: SafeClaimRoleBadge(role: mainRole),
+                    ),
+                  ],
+                ),
+>>>>>>> 365c10e (redesign grafico)
               ),
             ),
           ],

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'elenco.dart';
+import '../app/theme.dart';
 
 class NewAccountPage extends StatefulWidget {
   const NewAccountPage({super.key});
@@ -26,12 +26,12 @@ class _NewAccountPageState extends State<NewAccountPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: SafeClaimColors.background,
 
       /// APP BAR
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: const Color(0xFF1E66F5),
+        backgroundColor: SafeClaimColors.primary,
         foregroundColor: Colors.white,
         leading: const BackButton(),
         titleSpacing: 0,
@@ -64,14 +64,11 @@ class _NewAccountPageState extends State<NewAccountPage> {
               /// TITOLO
               Row(
                 children: const [
-                  Icon(Icons.shield_outlined, color: Color(0xFF2563EB)),
+                  Icon(Icons.shield_outlined, color: SafeClaimColors.primary),
                   SizedBox(width: 8),
                   Text(
                     "Crea Nuovo Account",
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -89,10 +86,7 @@ class _NewAccountPageState extends State<NewAccountPage> {
 
               /// EMAIL
               _label("Email"),
-              _textField(
-                hint: "email@esempio.it",
-                controller: emailController,
-              ),
+              _textField(hint: "email@esempio.it", controller: emailController),
 
               const SizedBox(height: 20),
 
@@ -132,18 +126,12 @@ class _NewAccountPageState extends State<NewAccountPage> {
                 child: ElevatedButton(
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
-                      print("Username: ${usernameController.text}");
-                      print("Email: ${emailController.text}");
-                      print("Password: ${passwordController.text}");
+                      debugPrint("Username: ${usernameController.text}");
+                      debugPrint("Email: ${emailController.text}");
+                      debugPrint("Password: ${passwordController.text}");
                     }
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2563EB),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 3,
-                  ),
+                  style: ElevatedButton.styleFrom(elevation: 3),
                   child: const Text(
                     "Crea Account",
                     style: TextStyle(
@@ -169,14 +157,14 @@ class _NewAccountPageState extends State<NewAccountPage> {
         text: TextSpan(
           text: text,
           style: const TextStyle(
-            color: Colors.black,
+            color: SafeClaimColors.foreground,
             fontWeight: FontWeight.w600,
             fontSize: 14,
           ),
           children: const [
             TextSpan(
               text: " *",
-              style: TextStyle(color: Colors.red),
+              style: TextStyle(color: SafeClaimColors.danger),
             ),
           ],
         ),
@@ -201,43 +189,40 @@ class _NewAccountPageState extends State<NewAccountPage> {
       },
       decoration: InputDecoration(
         hintText: hint,
-        filled: true,
-        fillColor: Colors.grey.shade100,
-
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
 
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: const BorderSide(color: SafeClaimColors.primaryLight),
         ),
 
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: const BorderSide(color: SafeClaimColors.primaryLight),
         ),
 
         focusedBorder: const OutlineInputBorder(
           borderRadius: BorderRadius.all(Radius.circular(12)),
-          borderSide: BorderSide(color: Color(0xFF2563EB), width: 2),
+          borderSide: BorderSide(color: SafeClaimColors.primary, width: 2),
         ),
 
         errorBorder: const OutlineInputBorder(
           borderRadius: BorderRadius.all(Radius.circular(12)),
-          borderSide: BorderSide(color: Colors.red, width: 2),
+          borderSide: BorderSide(color: SafeClaimColors.danger, width: 2),
         ),
 
         focusedErrorBorder: const OutlineInputBorder(
           borderRadius: BorderRadius.all(Radius.circular(12)),
-          borderSide: BorderSide(color: Colors.red, width: 2),
+          borderSide: BorderSide(color: SafeClaimColors.danger, width: 2),
         ),
 
         suffixIcon: isPassword
             ? IconButton(
                 icon: Icon(
-                  obscurePassword
-                      ? Icons.visibility_off
-                      : Icons.visibility,
+                  obscurePassword ? Icons.visibility_off : Icons.visibility,
                 ),
                 onPressed: () {
                   setState(() {
@@ -251,26 +236,19 @@ class _NewAccountPageState extends State<NewAccountPage> {
   }
 
   /// CHECKBOX RUOLI MODERNE
-  Widget _roleTile(
-    String label,
-    bool value,
-    Function(bool) onChanged,
-  ) {
+  Widget _roleTile(String label, bool value, Function(bool) onChanged) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: SafeClaimColors.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: SafeClaimColors.primaryLight),
       ),
       child: CheckboxListTile(
         value: value,
         onChanged: (v) => onChanged(v ?? false),
-        title: Text(
-          label,
-          style: const TextStyle(fontWeight: FontWeight.w500),
-        ),
-        activeColor: const Color(0xFF2563EB),
+        title: Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
+        activeColor: SafeClaimColors.primary,
         controlAffinity: ListTileControlAffinity.leading,
         contentPadding: const EdgeInsets.symmetric(horizontal: 12),
       ),

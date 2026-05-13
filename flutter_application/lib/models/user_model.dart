@@ -1,10 +1,20 @@
 import 'package:flutter/material.dart';
 
+import '../app/theme.dart';
+
 /// =====================
 /// ENUM E CONFIG RUOLI
 /// =====================
 
-enum UserRole { perito, automobilista, officina, soccorso, admin, assicuratore, azienda }
+enum UserRole {
+  perito,
+  automobilista,
+  officina,
+  soccorso,
+  admin,
+  assicuratore,
+  azienda,
+}
 
 /// Converte una stringa di ruolo API al corrispettivo enum
 UserRole stringToUserRole(String roleString) {
@@ -54,18 +64,16 @@ class AppUser {
     final nome = json['nome'] as String? ?? '';
     final cognome = json['cognome'] as String? ?? '';
     final name = '$nome $cognome'.trim();
-    
+
     final rolesRaw = json['ruolo'];
     List<UserRole> roles = [];
-    
+
     if (rolesRaw is List) {
-      roles = rolesRaw
-          .map((r) => stringToUserRole(r.toString()))
-          .toList();
+      roles = rolesRaw.map((r) => stringToUserRole(r.toString())).toList();
     } else if (rolesRaw is String) {
       roles = [stringToUserRole(rolesRaw)];
     }
-    
+
     if (roles.isEmpty) {
       roles = [UserRole.automobilista]; // Default
     }
@@ -76,9 +84,9 @@ class AppUser {
       email: json['email'] as String? ?? '',
       phone: json['telefono'] as String? ?? '',
       roles: roles,
-      registrationDate: json['data_registrazione'] != null 
-        ? DateTime.tryParse(json['data_registrazione'])
-        : null,
+      registrationDate: json['data_registrazione'] != null
+          ? DateTime.tryParse(json['data_registrazione'])
+          : null,
     );
   }
 }
@@ -96,48 +104,47 @@ class RoleConfig {
   const RoleConfig(this.label, this.bg, this.text, this.icon);
 }
 
-// Colori badge simili a Tailwind - VERSIONI MOLTO ACCESE
-final roleConfig = {
-  UserRole.perito: RoleConfig(
+final Map<UserRole, RoleConfig> roleConfig = {
+  UserRole.perito: const RoleConfig(
     "Perito",
-    Color(0xFF1D4ED8), // bg-blue-700 - BLU MOLTO ACCESO
-    Color(0xFFFFFFFF), // text-white
+    SafeClaimColors.primaryLightest,
+    SafeClaimColors.primaryDark,
     Icons.help_outline,
   ),
-  UserRole.automobilista: RoleConfig(
+  UserRole.automobilista: const RoleConfig(
     "Automobilista",
-    Color(0xFF15803D), // bg-green-700 - VERDE MOLTO ACCESO
-    Color(0xFFFFFFFF), // text-white
+    SafeClaimColors.neutral,
+    SafeClaimColors.textStrong,
     Icons.person,
   ),
-  UserRole.officina: RoleConfig(
+  UserRole.officina: const RoleConfig(
     "Officina",
-    Color(0xFFC2410C), // bg-orange-700 - ARANCIONE MOLTO ACCESO
-    Color(0xFFFFFFFF), // text-white
+    SafeClaimColors.primaryLightest,
+    SafeClaimColors.primary,
     Icons.build,
   ),
-  UserRole.soccorso: RoleConfig(
+  UserRole.soccorso: const RoleConfig(
     "Soccorso",
-    Color(0xFF7C3AED), // bg-purple-700 - VIOLA MOLTO ACCESO
-    Color(0xFFFFFFFF), // text-white
+    Color(0x337AB2B2),
+    SafeClaimColors.primaryDark,
     Icons.local_taxi,
   ),
-  UserRole.admin: RoleConfig(
+  UserRole.admin: const RoleConfig(
     "Admin",
-    Color(0xFFB91C1C), // bg-red-700 - ROSSO MOLTO ACCESO
-    Color(0xFFFFFFFF), // text-white
+    SafeClaimColors.foreground,
+    Colors.white,
     Icons.security,
   ),
-  UserRole.assicuratore: RoleConfig(
+  UserRole.assicuratore: const RoleConfig(
     "Assicuratore",
-    Color(0xFF0369A1), // bg-cyan-700 - AZZURRO
-    Color(0xFFFFFFFF), // text-white
+    SafeClaimColors.primaryLightest,
+    SafeClaimColors.textStrong,
     Icons.shield,
   ),
-  UserRole.azienda: RoleConfig(
+  UserRole.azienda: const RoleConfig(
     "Azienda",
-    Color(0xFF7C2D12), // bg-orange-900 - MARRONE
-    Color(0xFFFFFFFF), // text-white
+    SafeClaimColors.neutral,
+    SafeClaimColors.primaryDark,
     Icons.business,
   ),
 };
