@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import '../app/theme.dart';
 import '../services/api_service.dart';
 
 class NewAccountPage extends StatefulWidget {
@@ -42,9 +43,11 @@ class _NewAccountPageState extends State<NewAccountPage> {
       final response = await _apiService.post(
         '/create_account',
         {
-          "username": usernameController.text.trim(),
+          "nome": nomeController.text.trim(),
+          "cognome": cognomeController.text.trim(),
           "email": emailController.text.trim(),
           "password": passwordController.text.trim(),
+          "telefono": telefonoController.text.trim(),
           "roles": {
             "admin": admin,
             "soccorso": soccorso,
@@ -130,10 +133,18 @@ class _NewAccountPageState extends State<NewAccountPage> {
 
               const SizedBox(height: 20),
 
-              _label("Username"),
+              _label("Nome"),
               _textField(
                 hint: "es. mario.rossi",
-                controller: usernameController,
+                controller: nomeController,
+              ),
+
+              const SizedBox(height: 20),
+
+              _label("Cognome"),
+              _textField(
+                hint: "es. mario.rossi",
+                controller: cognomeController,
               ),
 
               const SizedBox(height: 20),
@@ -148,6 +159,14 @@ class _NewAccountPageState extends State<NewAccountPage> {
                 hint: "Inserisci password",
                 controller: passwordController,
                 isPassword: true,
+              ),
+
+              const SizedBox(height: 20),
+
+              _label("Telefono"),
+              _textField(
+                hint: "es. mario.rossi",
+                controller: telefonoController,
               ),
 
               const SizedBox(height: 30),
