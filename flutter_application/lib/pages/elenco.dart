@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'gestioneut.dart';
 import '../services/api_service.dart';
 import '../models/user_model.dart';
 
@@ -330,132 +329,74 @@ class _ElencoPageState extends State<ElencoPage> {
   /// =====================
 
   Widget _userCard(AppUser user) {
-    final mainRole = user.roles.first;
-    final otherRoles =
-        user.roles.length > 1 ? user.roles.sublist(1) : <UserRole>[];
-    final config = roleConfig[mainRole]!;
-
-    return InkWell(
-      onTap: () async {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => GestioneUtPage(user: user),
-          ),
-        );
-        setState(() {}); // Aggiorna i ruoli al ritorno
-      },
-      child: Card(
-        elevation: 1,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              CircleAvatar(
-                radius: 24,
-                backgroundColor: Colors.grey[200],
-                child: const Icon(Icons.person, color: Colors.grey),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            user.name,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.w600, fontSize: 15),
-                          ),
+    return Card(
+      elevation: 1,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CircleAvatar(
+              radius: 24,
+              backgroundColor: Colors.grey[200],
+              child: const Icon(Icons.person, color: Colors.grey),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    user.name,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 15),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    user.email,
+                    style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    user.phone,
+                    style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: user.roles.map((role) {
+                      final cfg = roleConfig[role]!;
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: cfg.bg,
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                        if (otherRoles.isNotEmpty)
-                          PopupMenuButton<UserRole>(
-                            icon: const Icon(Icons.more_vert, size: 20),
-                            itemBuilder: (context) => [
-                              PopupMenuItem<UserRole>(
-                                enabled: false,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      "Altri ruoli:",
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    ...otherRoles.map((role) {
-                                      final cfg = roleConfig[role]!;
-                                      return Container(
-                                        margin: const EdgeInsets.only(bottom: 4),
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 8, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: cfg.bg,
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(cfg.icon, size: 14, color: cfg.text),
-                                            const SizedBox(width: 4),
-                                            Text(cfg.label,
-                                                style: TextStyle(
-                                                    fontSize: 12, color: cfg.text)),
-                                          ],
-                                        ),
-                                      );
-                                    }),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      user.email,
-                      style: TextStyle(color: Colors.grey[600], fontSize: 13),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      user.phone,
-                      style: TextStyle(color: Colors.grey[600], fontSize: 13),
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: config.bg,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(config.icon, size: 14, color: config.text),
-                          const SizedBox(width: 4),
-                          Text(
-                            config.label,
-                            style: TextStyle(color: config.text, fontSize: 12),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(cfg.icon, size: 14, color: cfg.text),
+                            const SizedBox(width: 4),
+                            Text(
+                              cfg.label,
+                              style:
+                                  TextStyle(color: cfg.text, fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
+
