@@ -335,74 +335,11 @@ class _ElencoPageState extends State<ElencoPage> {
   /// =====================
 
   Widget _userCard(AppUser user) {
-<<<<<<< HEAD
-    return Card(
-      elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            CircleAvatar(
-              radius: 24,
-              backgroundColor: Colors.grey[200],
-              child: const Icon(Icons.person, color: Colors.grey),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    user.name,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: 15),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    user.email,
-                    style: TextStyle(color: Colors.grey[600], fontSize: 13),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    user.phone,
-                    style: TextStyle(color: Colors.grey[600], fontSize: 13),
-                  ),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: user.roles.map((role) {
-                      final cfg = roleConfig[role]!;
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: cfg.bg,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(cfg.icon, size: 14, color: cfg.text),
-                            const SizedBox(width: 4),
-                            Text(
-                              cfg.label,
-                              style:
-                                  TextStyle(color: cfg.text, fontSize: 12),
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ],
-=======
     final mainRole = user.roles.first;
     final otherRoles = user.roles.length > 1
         ? user.roles.sublist(1)
         : <UserRole>[];
+
     return InkWell(
       onTap: () async {
         await Navigator.push(
@@ -497,22 +434,14 @@ class _ElencoPageState extends State<ElencoPage> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      child: SafeClaimRoleBadge(role: mainRole),
-                    ),
+                    SafeClaimRoleBadge(role: mainRole),
                   ],
                 ),
->>>>>>> 365c10e (redesign grafico)
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
-
