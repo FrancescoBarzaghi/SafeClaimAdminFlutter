@@ -46,26 +46,28 @@ class _NewAccountPageState extends State<NewAccountPage> {
     });
 
     try {
+      final selectedRoles = <String>[
+        if (admin) 'admin',
+        if (soccorso) 'soccorso',
+        if (officina) 'officina',
+        if (perito) 'perito',
+      ];
+
       final response = await _apiService.post(
-        '/create_account',
+        '/creazioneUtenti/users',
         {
           "nome": nomeController.text.trim(),
           "cognome": cognomeController.text.trim(),
           "email": emailController.text.trim(),
           "password": passwordController.text.trim(),
           "telefono": telefonoController.text.trim(),
-          "roles": {
-            "admin": admin,
-            "soccorso": soccorso,
-            "officina": officina,
-            "perito": perito,
-          }
+          "ruolo": selectedRoles,
         },
       );
 
       final data = jsonDecode(response.body);
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -143,7 +145,7 @@ class _NewAccountPageState extends State<NewAccountPage> {
 
               _label("Nome"),
               _textField(
-                hint: "es. mario.rossi",
+                hint: "Mario",
                 controller: nomeController,
               ),
 
@@ -151,14 +153,14 @@ class _NewAccountPageState extends State<NewAccountPage> {
 
               _label("Cognome"),
               _textField(
-                hint: "es. mario.rossi",
+                hint: "Rossi",
                 controller: cognomeController,
               ),
 
               const SizedBox(height: 20),
 
               _label("Email"),
-              _textField(hint: "email@esempio.it", controller: emailController),
+              _textField(hint: "esempio@email.it", controller: emailController),
 
               const SizedBox(height: 20),
 
@@ -173,7 +175,7 @@ class _NewAccountPageState extends State<NewAccountPage> {
 
               _label("Telefono"),
               _textField(
-                hint: "es. mario.rossi",
+                hint: "3331234567",
                 controller: telefonoController,
               ),
 
