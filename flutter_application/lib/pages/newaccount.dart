@@ -32,7 +32,7 @@ class _NewAccountPageState extends State<NewAccountPage> {
 
   bool admin = false;
   bool soccorso = false;
-  bool officina = true;
+  bool officina = false;
   bool perito = false;
 
   bool loading = false;
@@ -88,7 +88,7 @@ class _NewAccountPageState extends State<NewAccountPage> {
         setState(() {
           admin = false;
           soccorso = false;
-          officina = true;
+          officina = false;
           perito = false;
         });
       } else {
@@ -177,6 +177,7 @@ class _NewAccountPageState extends State<NewAccountPage> {
               _textField(
                 hint: "3331234567",
                 controller: telefonoController,
+                optional: true,
               ),
 
               const SizedBox(height: 30),
@@ -266,6 +267,7 @@ class _NewAccountPageState extends State<NewAccountPage> {
     required String hint,
     required TextEditingController controller,
     bool isPassword = false,
+    bool optional = false,
   }) {
     return TextFormField(
       controller: controller,
@@ -273,9 +275,10 @@ class _NewAccountPageState extends State<NewAccountPage> {
       obscureText:
           isPassword ? obscurePassword : false,
 
-      validator: (value) {
-        if (value == null ||
-            value.trim().isEmpty) {
+      validator: optional
+      ? null
+      : (value) {
+        if (value == null || value.trim().isEmpty) {
           return "Campo obbligatorio";
         }
 
