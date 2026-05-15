@@ -93,41 +93,27 @@ class _Header extends StatelessWidget {
               child: Image.asset('assets/logo.png', fit: BoxFit.contain),
             ),
             const Spacer(),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                PopupMenuButton<String>(
-                  offset: const Offset(0, 50),
-                  padding: EdgeInsets.zero,
-                  icon: const Icon(Icons.notifications, color: Colors.white),
-                  itemBuilder: (_) => const [
-                    PopupMenuItem(enabled: false, child: Text('Notifiche')),
-                  ],
-                ),
-                const SizedBox(width: 12),
-                PopupMenuButton<String>(
-                  offset: const Offset(0, 50),
-                  padding: EdgeInsets.zero,
-                  icon: const Icon(Icons.person, color: Colors.white),
-                  onSelected: (value) {
-                    if (value == 'logout') {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (_) => const LoginPage()),
-                      );
-                    }
-                  },
-                  itemBuilder: (_) => const [
-                    PopupMenuItem(enabled: false, child: Text('Admin')),
-                    PopupMenuDivider(),
-                    PopupMenuItem(
-                      value: 'logout',
-                      child: Text(
-                        'Logout',
-                        style: TextStyle(color: SafeClaimColors.danger),
-                      ),
-                    ),
-                  ],
+            PopupMenuButton<String>(
+              offset: const Offset(0, 50),
+              padding: EdgeInsets.zero,
+              icon: const Icon(Icons.person, color: Colors.white),
+              onSelected: (value) {
+                if (value == 'logout') {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const LoginPage()),
+                  );
+                }
+              },
+              itemBuilder: (_) => const [
+                PopupMenuItem(enabled: false, child: Text('Admin')),
+                PopupMenuDivider(),
+                PopupMenuItem(
+                  value: 'logout',
+                  child: Text(
+                    'Logout',
+                    style: TextStyle(color: SafeClaimColors.danger),
+                  ),
                 ),
               ],
             ),
