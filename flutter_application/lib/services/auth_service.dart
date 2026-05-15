@@ -178,6 +178,27 @@ class AuthService {
   }
 
   Future<void> logout() async {
+    // Best-effort: prova a invalidare la sessione su Keycloak prima di
+    // cancellare i token locali. Eventuali errori (rete, refresh token
+    // già scaduto) non devono bloccare il logout client-side.
+    final refreshToken = await _secureStorage.read(key: 'refresh_token');
+    if (refreshToken != null && refreshToken.isNotEmpty) {
+      try {
+        await http.post(
+          Uri.parse(
+            '$_baseUrl/realms/$_realm/protocol/openid-connect/logout',
+          ),
+          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+          body: {
+            'client_id': _clientId,
+            'refresh_token': refreshToken,
+          },
+        ).timeout(const Duration(seconds: 5));
+      } catch (e) {
+        debugPrint('Logout Keycloak fallito (proseguo locale): $e');
+      }
+    }
+
     await _secureStorage.delete(key: 'jwt_token');
     await _secureStorage.delete(key: 'refresh_token');
   }

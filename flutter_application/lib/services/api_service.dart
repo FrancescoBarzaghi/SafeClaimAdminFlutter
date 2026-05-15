@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../config.dart';
+import 'auth_service.dart';
+import 'session.dart';
 
 class ApiService {
   static final ApiService _instance = ApiService._internal();
@@ -11,6 +13,11 @@ class ApiService {
 
   final String _baseUrl = AppConfig.apiBaseUrl;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  final AuthService _auth = AuthService();
+
+  // Coalesce eventuali refresh paralleli: se più chiamate ricevono 401 nello
+  // stesso istante, devono condividere lo stesso futuro di refresh.
+  Future<bool>? _ongoingRefresh;
 
   // Genera gli header includendo il token automaticamente
   // Abbiamo aggiunto il parametro opzionale 'token' per compatibilità con le chiamate esistenti
@@ -28,18 +35,48 @@ class ApiService {
     return await _storage.read(key: 'jwt_token');
   }
 
+  /// Esegue una richiesta HTTP e intercetta i 401: tenta un refresh, e
+  /// se questo fallisce forza il logout + redirect a `LoginPage`.
+  Future<http.Response> _sendWithAuth(
+    Future<http.Response> Function(Map<String, String> headers) doRequest, {
+    String? explicitToken,
+  }) async {
+    final firstResponse =
+        await doRequest(await _headers(token: explicitToken));
+
+    if (firstResponse.statusCode != 401 || explicitToken != null) {
+      return firstResponse;
+    }
+
+    final refreshed = await _refreshTokenCoalesced();
+    if (!refreshed) {
+      await forceLogoutToLogin();
+      return firstResponse;
+    }
+
+    return doRequest(await _headers());
+  }
+
+  Future<bool> _refreshTokenCoalesced() {
+    return _ongoingRefresh ??= () async {
+      try {
+        return await _auth.refreshToken();
+      } finally {
+        _ongoingRefresh = null;
+      }
+    }();
+  }
+
   /// POST request
   Future<http.Response> post(String endpoint, Map<String, dynamic> body) async {
     try {
-      final headers = await _headers();
-      final response = await http
+      return await _sendWithAuth((headers) => http
           .post(
             Uri.parse('$_baseUrl$endpoint'),
             headers: headers,
             body: jsonEncode(body),
           )
-          .timeout(const Duration(seconds: 10));
-      return response;
+          .timeout(const Duration(seconds: 10)));
     } catch (e) {
       debugPrint('API ERROR POST [$endpoint]: $e');
       rethrow;
@@ -49,11 +86,12 @@ class ApiService {
   /// GET request (Aggiornata per supportare il parametro token opzionale)
   Future<http.Response> get(String endpoint, {String? token}) async {
     try {
-      final headers = await _headers(token: token);
-      final response = await http
-          .get(Uri.parse('$_baseUrl$endpoint'), headers: headers)
-          .timeout(const Duration(seconds: 10));
-      return response;
+      return await _sendWithAuth(
+        (headers) => http
+            .get(Uri.parse('$_baseUrl$endpoint'), headers: headers)
+            .timeout(const Duration(seconds: 10)),
+        explicitToken: token,
+      );
     } catch (e) {
       debugPrint('API ERROR GET [$endpoint]: $e');
       rethrow;
@@ -63,15 +101,13 @@ class ApiService {
   /// PUT request
   Future<http.Response> put(String endpoint, Map<String, dynamic> body) async {
     try {
-      final headers = await _headers();
-      final response = await http
+      return await _sendWithAuth((headers) => http
           .put(
             Uri.parse('$_baseUrl$endpoint'),
             headers: headers,
             body: jsonEncode(body),
           )
-          .timeout(const Duration(seconds: 10));
-      return response;
+          .timeout(const Duration(seconds: 10)));
     } catch (e) {
       debugPrint('API ERROR PUT [$endpoint]: $e');
       rethrow;
@@ -81,11 +117,9 @@ class ApiService {
   /// DELETE request
   Future<http.Response> delete(String endpoint) async {
     try {
-      final headers = await _headers();
-      final response = await http
+      return await _sendWithAuth((headers) => http
           .delete(Uri.parse('$_baseUrl$endpoint'), headers: headers)
-          .timeout(const Duration(seconds: 10));
-      return response;
+          .timeout(const Duration(seconds: 10)));
     } catch (e) {
       debugPrint('API ERROR DELETE [$endpoint]: $e');
       rethrow;
@@ -98,11 +132,13 @@ class ApiService {
     Map<String, dynamic> body, {
     String? token,
   }) async {
-    final headers = await _headers(token: token);
-    return http.patch(
-      Uri.parse('$_baseUrl$endpoint'),
-      headers: headers,
-      body: jsonEncode(body),
+    return _sendWithAuth(
+      (headers) => http.patch(
+        Uri.parse('$_baseUrl$endpoint'),
+        headers: headers,
+        body: jsonEncode(body),
+      ),
+      explicitToken: token,
     );
   }
 
@@ -115,8 +151,10 @@ class ApiService {
     final uri = Uri.parse(
       '$_baseUrl$endpoint',
     ).replace(queryParameters: queryParams);
-    final headers = await _headers(token: token);
-    return http.get(uri, headers: headers);
+    return _sendWithAuth(
+      (headers) => http.get(uri, headers: headers),
+      explicitToken: token,
+    );
   }
 
   /// Recupera la lista di utenti da /api/gestioneUtenti/utenti
@@ -171,22 +209,22 @@ class ApiService {
       final body = {
         'ruoli': roles,
       };
-      
-      print('📡 POST $_baseUrl$endpoint with roles: $roles');
-      
+
+      debugPrint('POST $_baseUrl$endpoint with roles: $roles');
+
       // Prova con POST se PUT non funziona per CORS
       final response = await post(endpoint, body);
-      
+
       if (response.statusCode == 200 || response.statusCode == 204) {
-        print('✅ Ruoli aggiornati con successo');
+        debugPrint('Ruoli aggiornati con successo');
         return true;
       } else {
-        print('❌ Errore nell\'aggiornamento dei ruoli: ${response.statusCode}');
-        print('Response body: ${response.body}');
+        debugPrint('Errore nell\'aggiornamento dei ruoli: ${response.statusCode}');
+        debugPrint('Response body: ${response.body}');
         return false;
       }
     } catch (e) {
-      print('❌ Exception updateUserRoles: $e');
+      debugPrint('Exception updateUserRoles: $e');
       return false;
     }
   }
@@ -194,9 +232,13 @@ class ApiService {
   /// Testa la connessione all'API
   Future<bool> testConnection() async {
     try {
-      final headers = await _headers();
+      // L'endpoint /common/health è whitelisted lato backend e non richiede
+      // token: chiamiamolo senza passare per l'interceptor (no auto-logout).
       final response = await http
-          .get(Uri.parse('$_baseUrl/common/health'), headers: headers)
+          .get(
+            Uri.parse('$_baseUrl/common/health'),
+            headers: {'Accept': 'application/json'},
+          )
           .timeout(const Duration(seconds: 5));
 
       return response.statusCode == 200;
