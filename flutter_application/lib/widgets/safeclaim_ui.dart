@@ -39,16 +39,22 @@ BoxDecoration safeClaimStatusDecoration({
 class SafeClaimRoleBadge extends StatelessWidget {
   final UserRole role;
   final bool compact;
+  final Color? backgroundColor;
+  final Color? textColor;
 
   const SafeClaimRoleBadge({
     super.key,
     required this.role,
     this.compact = true,
+    this.backgroundColor,
+    this.textColor,
   });
 
   @override
   Widget build(BuildContext context) {
     final cfg = roleConfig[role]!;
+    final effectiveBackground = backgroundColor ?? cfg.bg;
+    final effectiveText = textColor ?? cfg.text;
 
     return Container(
       padding: EdgeInsets.symmetric(
@@ -56,19 +62,19 @@ class SafeClaimRoleBadge extends StatelessWidget {
         vertical: compact ? 4 : 6,
       ),
       decoration: safeClaimStatusDecoration(
-        background: cfg.bg,
-        border: cfg.text.withValues(alpha: 0.45),
+        background: effectiveBackground,
+        border: effectiveText.withValues(alpha: 0.45),
         radius: 8,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(cfg.icon, size: compact ? 14 : 16, color: cfg.text),
+          Icon(cfg.icon, size: compact ? 14 : 16, color: effectiveText),
           const SizedBox(width: 4),
           Text(
             cfg.label,
             style: TextStyle(
-              color: cfg.text,
+              color: effectiveText,
               fontSize: compact ? 12 : 13,
               fontWeight: FontWeight.w600,
             ),

@@ -390,7 +390,13 @@ class _ElencoPageState extends State<ElencoPage> {
                     spacing: 8,
                     runSpacing: 8,
                     children: user.roles
-                        .map((role) => SafeClaimRoleBadge(role: role))
+                        .map(
+                          (role) => SafeClaimRoleBadge(
+                            role: role,
+                            backgroundColor: Colors.white,
+                            textColor: SafeClaimColors.textStrong,
+                          ),
+                        )
                         .toList(),
                   ),
                 ],
