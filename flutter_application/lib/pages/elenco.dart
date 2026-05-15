@@ -335,111 +335,59 @@ class _ElencoPageState extends State<ElencoPage> {
   /// =====================
 
   Widget _userCard(AppUser user) {
-    final mainRole = user.roles.first;
-    final otherRoles = user.roles.length > 1
-        ? user.roles.sublist(1)
-        : <UserRole>[];
-
-    return InkWell(
-      onTap: () async {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => GestioneUtPage(user: user)),
-        );
-        setState(() {}); // Aggiorna i ruoli al ritorno
-      },
-      child: Card(
-        elevation: 1,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              CircleAvatar(
-                radius: 24,
-                backgroundColor: SafeClaimColors.primaryLightest,
-                child: const Icon(
-                  Icons.person,
-                  color: SafeClaimColors.textMuted,
-                ),
+    return Card(
+      elevation: 1,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CircleAvatar(
+              radius: 24,
+              backgroundColor: SafeClaimColors.primaryLightest,
+              child: const Icon(Icons.person, color: SafeClaimColors.textMuted),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    user.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    user.email,
+                    style: const TextStyle(
+                      color: SafeClaimColors.textMuted,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    user.phone,
+                    style: const TextStyle(
+                      color: SafeClaimColors.textMuted,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: user.roles
+                        .map((role) => SafeClaimRoleBadge(role: role))
+                        .toList(),
+                  ),
+                ],
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            user.name,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 15,
-                            ),
-                          ),
-                        ),
-                        if (otherRoles.isNotEmpty)
-                          PopupMenuButton<UserRole>(
-                            icon: const Icon(Icons.more_vert, size: 20),
-                            itemBuilder: (context) => [
-                              PopupMenuItem<UserRole>(
-                                enabled: false,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      "Altri ruoli:",
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: SafeClaimColors.textMuted,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    ...otherRoles.map((role) {
-                                      return Container(
-                                        margin: const EdgeInsets.only(
-                                          bottom: 4,
-                                        ),
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 4,
-                                        ),
-                                        child: SafeClaimRoleBadge(role: role),
-                                      );
-                                    }),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      user.email,
-                      style: const TextStyle(
-                        color: SafeClaimColors.textMuted,
-                        fontSize: 13,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      user.phone,
-                      style: const TextStyle(
-                        color: SafeClaimColors.textMuted,
-                        fontSize: 13,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    SafeClaimRoleBadge(role: mainRole),
-                  ],
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
