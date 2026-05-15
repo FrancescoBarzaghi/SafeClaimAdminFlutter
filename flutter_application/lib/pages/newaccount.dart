@@ -13,10 +13,16 @@ class NewAccountPage extends StatefulWidget {
 class _NewAccountPageState extends State<NewAccountPage> {
   final _formKey = GlobalKey<FormState>();
 
-  final TextEditingController usernameController =
+  final TextEditingController nomeController =
+      TextEditingController();
+
+  final TextEditingController cognomeController =
       TextEditingController();
 
   final TextEditingController emailController =
+      TextEditingController();
+      
+  final TextEditingController telefonoController =
       TextEditingController();
 
   final TextEditingController passwordController =
@@ -71,8 +77,10 @@ class _NewAccountPageState extends State<NewAccountPage> {
         }
 
         /// RESET CAMPI
-        usernameController.clear();
+        nomeController.clear();
+        cognomeController.clear();
         emailController.clear();
+        telefonoController.clear();
         passwordController.clear();
 
         setState(() {
