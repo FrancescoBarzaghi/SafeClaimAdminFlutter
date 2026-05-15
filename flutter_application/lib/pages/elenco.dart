@@ -315,10 +315,19 @@ class _ElencoPageState extends State<ElencoPage> {
                     label: Text(cfg.label),
                     selected: selected,
                     onSelected: (_) => setState(() => selectedRole = r),
-                    selectedColor: cfg.bg,
+                    selectedColor: SafeClaimColors.primary,
                     backgroundColor: SafeClaimColors.card,
+                    side: BorderSide(
+                      color: selected
+                          ? Colors.white.withOpacity(0.55)
+                          : SafeClaimColors.primaryLight,
+                      width: selected ? 1.5 : 1,
+                    ),
+                    elevation: selected ? 2 : 0,
                     labelStyle: TextStyle(
-                      color: selected ? cfg.text : SafeClaimColors.textStrong,
+                      color: selected
+                          ? Colors.white
+                          : SafeClaimColors.textStrong,
                     ),
                   );
                 }),

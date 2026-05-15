@@ -67,21 +67,28 @@ class _GestioneUtPageState extends State<GestioneUtPage> {
     try {
       final rolesStrings = user.roles.map((role) {
         switch (role) {
-          case UserRole.perito: return 'perito';
-          case UserRole.automobilista: return 'automobilista';
-          case UserRole.officina: return 'officina';
-          case UserRole.soccorso: return 'soccorso';
-          case UserRole.admin: return 'admin';
-          case UserRole.assicuratore: return 'assicuratore';
-          case UserRole.azienda: return 'azienda';
+          case UserRole.perito:
+            return 'perito';
+          case UserRole.automobilista:
+            return 'automobilista';
+          case UserRole.officina:
+            return 'officina';
+          case UserRole.soccorso:
+            return 'soccorso';
+          case UserRole.admin:
+            return 'admin';
+          case UserRole.assicuratore:
+            return 'assicuratore';
+          case UserRole.azienda:
+            return 'azienda';
         }
       }).toList();
 
       final success = await _apiService.updateUserRoles(user.id, rolesStrings);
-      
+
       if (mounted) {
         setState(() => isSaving = false);
-        
+
         if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -150,7 +157,10 @@ class _GestioneUtPageState extends State<GestioneUtPage> {
                 onChanged: (value) => setState(() => searchQuery = value),
                 decoration: InputDecoration(
                   hintText: "Cerca utente per nome, email o telefono...",
-                  prefixIcon: const Icon(Icons.search, color: Color(0xFF1E66F5)),
+                  prefixIcon: const Icon(
+                    Icons.search,
+                    color: Color(0xFF1E66F5),
+                  ),
                   suffixIcon: searchQuery.isNotEmpty
                       ? IconButton(
                           icon: const Icon(Icons.clear),
@@ -167,7 +177,10 @@ class _GestioneUtPageState extends State<GestioneUtPage> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Color(0xFF1E66F5), width: 2),
+                    borderSide: const BorderSide(
+                      color: Color(0xFF1E66F5),
+                      width: 2,
+                    ),
                   ),
                 ),
               ),
@@ -273,7 +286,7 @@ class _GestioneUtPageState extends State<GestioneUtPage> {
                   ),
 
                   const SizedBox(height: 20),
-                  
+
                   // Bottoni Azioni
                   Row(
                     children: [
@@ -284,19 +297,23 @@ class _GestioneUtPageState extends State<GestioneUtPage> {
                             backgroundColor: const Color(0xFF1E66F5),
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
                           onPressed: isSaving ? null : _saveUserRoles,
-                          icon: isSaving 
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                ),
-                              )
-                            : const Icon(Icons.save),
+                          icon: isSaving
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
+                                )
+                              : const Icon(Icons.save),
                           label: Text(
                             isSaving ? "Salvataggio..." : "Salva Ruoli",
                             style: const TextStyle(fontWeight: FontWeight.bold),
@@ -311,17 +328,22 @@ class _GestioneUtPageState extends State<GestioneUtPage> {
                             backgroundColor: Colors.red[50],
                             foregroundColor: Colors.red,
                             padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
                           onPressed: () {
                             // Logica eliminazione
                           },
                           icon: const Icon(Icons.delete_outline),
-                          label: const Text("Elimina", style: TextStyle(fontWeight: FontWeight.bold)),
+                          label: const Text(
+                            "Elimina",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
                         ),
-                      )
+                      ),
                     ],
-                  )
+                  ),
                 ],
               ),
             ),
@@ -415,20 +437,30 @@ class _GestioneUtPageState extends State<GestioneUtPage> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
-          color: isSelected ? cfg.bg : SafeClaimColors.card,
+          color: isSelected ? SafeClaimColors.primary : SafeClaimColors.card,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected
-                ? cfg.text.withValues(alpha: 0.45)
+                ? Colors.white.withOpacity(0.85)
                 : SafeClaimColors.primaryLight,
+            width: isSelected ? 2 : 1,
           ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: SafeClaimColors.primary.withOpacity(0.16),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : null,
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               _getIconForRole(role),
-              color: isSelected ? cfg.text : SafeClaimColors.textMuted,
+              color: isSelected ? Colors.white : SafeClaimColors.textMuted,
             ),
             const SizedBox(height: 4),
             Text(
@@ -436,7 +468,7 @@ class _GestioneUtPageState extends State<GestioneUtPage> {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color: isSelected ? cfg.text : SafeClaimColors.textStrong,
+                color: isSelected ? Colors.white : SafeClaimColors.textStrong,
               ),
             ),
           ],
