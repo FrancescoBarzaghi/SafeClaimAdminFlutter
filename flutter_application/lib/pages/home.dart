@@ -149,7 +149,7 @@ class _ActiveUsersCardState extends State<_ActiveUsersCard> {
   Future<void> _loadUtenti() async {
     setState(() => _status = LoadingStatus.loading);
     try {
-      final response = await _api.get('/gestioneUtenti/utenti/count');
+      final response = await _api.get('/v1/utenti/count');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -471,8 +471,8 @@ class _RoleStatisticsCardState extends State<_RoleStatisticsCard> {
     if (!mounted) return;
     setState(() => _status = LoadingStatus.loading);
     try {
-      // Chiamata all'API in homeAdmin.py
-      final response = await _api.get('/home-admin/stats-ruoli');
+      // Statistiche utenti per ruolo (consolidato sotto /v1/utenti/stats-ruoli)
+      final response = await _api.get('/v1/utenti/stats-ruoli');
 
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);

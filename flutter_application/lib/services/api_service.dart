@@ -157,10 +157,10 @@ class ApiService {
     );
   }
 
-  /// Recupera la lista di utenti da /api/gestioneUtenti/utenti
+  /// Recupera la lista di utenti da /api/v1/utenti
   Future<List<Map<String, dynamic>>> getUtenti({String? token}) async {
     try {
-      final endpoint = '/gestioneUtenti/utenti';
+      final endpoint = '/v1/utenti';
       debugPrint('GET $_baseUrl$endpoint');
 
       final response = await get(endpoint, token: token);
@@ -181,17 +181,19 @@ class ApiService {
   }
 
   /// Ricerca utenti per nome, cognome o email
+  /// (usa lo stesso endpoint /v1/utenti con query param ?search=)
   Future<List<Map<String, dynamic>>> cercaUtenti(
     String query, {
     String? token,
   }) async {
     try {
-      final endpoint = '/gestioneUtenti/utenti/cerca';
-      final response = await getWithQuery(endpoint, {'q': query}, token: token);
+      final endpoint = '/v1/utenti';
+      final response =
+          await getWithQuery(endpoint, {'search': query}, token: token);
 
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
-        final utenti = json['utenti_trovati'] as List?;
+        final utenti = json['utenti'] as List?;
         return utenti?.cast<Map<String, dynamic>>() ?? [];
       } else {
         throw Exception('Errore nella ricerca: ${response.statusCode}');
@@ -205,7 +207,7 @@ class ApiService {
   /// Aggiorna i ruoli di un utente
   Future<bool> updateUserRoles(String userId, List<String> roles, {String? token}) async {
     try {
-      final endpoint = '/gestioneUtenti/utenti/$userId/ruoli';
+      final endpoint = '/v1/utenti/$userId/ruoli';
       final body = {
         'ruoli': roles,
       };
@@ -232,11 +234,11 @@ class ApiService {
   /// Testa la connessione all'API
   Future<bool> testConnection() async {
     try {
-      // L'endpoint /common/health è whitelisted lato backend e non richiede
+      // L'endpoint /v1/health è whitelisted lato backend e non richiede
       // token: chiamiamolo senza passare per l'interceptor (no auto-logout).
       final response = await http
           .get(
-            Uri.parse('$_baseUrl/common/health'),
+            Uri.parse('$_baseUrl/v1/health'),
             headers: {'Accept': 'application/json'},
           )
           .timeout(const Duration(seconds: 5));

@@ -54,7 +54,7 @@ class _NewAccountPageState extends State<NewAccountPage> {
       ];
 
       final response = await _apiService.post(
-        '/creazioneUtenti/users',
+        '/v1/utenti',
         {
           "nome": nomeController.text.trim(),
           "cognome": cognomeController.text.trim(),
