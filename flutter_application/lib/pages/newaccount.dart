@@ -34,6 +34,7 @@ class _NewAccountPageState extends State<NewAccountPage> {
   bool soccorso = false;
   bool officina = false;
   bool perito = false;
+  bool assicuratore = false;
 
   bool loading = false;
   
@@ -51,6 +52,7 @@ class _NewAccountPageState extends State<NewAccountPage> {
         if (soccorso) 'soccorso',
         if (officina) 'officina',
         if (perito) 'perito',
+        if (assicuratore) 'assicuratore',
       ];
 
       final response = await _apiService.post(
@@ -90,6 +92,7 @@ class _NewAccountPageState extends State<NewAccountPage> {
           soccorso = false;
           officina = false;
           perito = false;
+          assicuratore = false;
         });
       } else {
         if (mounted) {
@@ -200,6 +203,10 @@ class _NewAccountPageState extends State<NewAccountPage> {
 
               _roleTile("Perito", perito, (v) {
                 setState(() => perito = v);
+              }),
+
+              _roleTile("assicuratore", assicuratore, (v) {
+                setState(() => assicuratore = v);
               }),
 
               const SizedBox(height: 30),
