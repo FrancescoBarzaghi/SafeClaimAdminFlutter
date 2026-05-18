@@ -16,7 +16,7 @@ class ApiService {
   final AuthService _auth = AuthService();
 
   // Coalesce eventuali refresh paralleli: se più chiamate ricevono 401 nello
-  // stesso istante, devono condividere lo stesso futuro di refresh.
+  // stesso istante, devono considerare lo stesso futuro di refresh.
   Future<bool>? _ongoingRefresh;
 
   // Genera gli header includendo il token automaticamente
@@ -227,6 +227,28 @@ class ApiService {
       }
     } catch (e) {
       debugPrint('Exception updateUserRoles: $e');
+      return false;
+    }
+  }
+
+  /// Elimina un utente dal sistema (DB + Keyclock) mappato sull'endpoint canonico /v1/utenti/<id>
+  Future<bool> deleteUser(String userId) async {
+    try {
+      final endpoint = '/v1/utenti/$userId';
+      debugPrint('DELETE $_baseUrl$endpoint');
+
+      final response = await delete(endpoint);
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        debugPrint('Utente $userId eliminato con successo dal server');
+        return true;
+      } else {
+        debugPrint('Errore nell\'eliminazione dell\'utente: ${response.statusCode}');
+        debugPrint('Response body: ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      debugPrint('Exception deleteUser: $e');
       return false;
     }
   }

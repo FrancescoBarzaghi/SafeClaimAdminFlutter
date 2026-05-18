@@ -21,6 +21,7 @@ class _GestioneUtPageState extends State<GestioneUtPage> {
   List<AppUser> allUsers = [];
   bool isLoading = false;
   bool isSaving = false;
+  bool isDeleting = false; // <-- Nuova variabile di stato per il caricamento dell'eliminazione
 
   @override
   void initState() {
@@ -121,9 +122,79 @@ class _GestioneUtPageState extends State<GestioneUtPage> {
     }
   }
 
+  /// Mostra un dialogo di conferma ed elimina definitivamente l'utente
+  Future<void> _deleteUserAccount() async {
+    // Mostra il popup di conferma
+    final bool? confermato = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("⚠️ Conferma Eliminazione"),
+          content: Text(
+            "Sei sicuro di voler eliminare permanentemente l'account di ${user.name}?\n\nQuesta azione rimuoverà l'utente dal Database e da Keycloak in modo irreversibile.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text("Annulla"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text("Elimina Definitivamente"),
+            ),
+          ],
+        );
+      },
+    );
+
+    // Se l'utente annulla, interrompiamo l'esecuzione
+    if (confermato != true) return;
+
+    setState(() => isDeleting = true);
+
+    try {
+      final success = await _apiService.deleteUser(user.id);
+
+      if (mounted) {
+        setState(() => isDeleting = false);
+
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('✅ Utente eliminato con successo da DB e Keycloak'),
+              backgroundColor: Colors.green[600],
+              duration: const Duration(seconds: 3),
+            ),
+          );
+          // Chiudiamo la pagina corrente tornando alla lista poiché l'utente non esiste più
+          Navigator.pop(context);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('❌ Errore durante l\'eliminazione dell\'utente'),
+              backgroundColor: Colors.red[600],
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => isDeleting = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Errore: $e'),
+            backgroundColor: Colors.red[600],
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Controllo se l'utente è attivo (ha almeno un ruolo)
     final bool isActive = user.roles.isNotEmpty;
 
     return Scaffold(
@@ -229,7 +300,6 @@ class _GestioneUtPageState extends State<GestioneUtPage> {
                             ),
                           ),
                           const SizedBox(height: 4),
-                          // Badge Attivo / Disattivo Dinamico
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 12,
@@ -301,7 +371,7 @@ class _GestioneUtPageState extends State<GestioneUtPage> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          onPressed: isSaving ? null : _saveUserRoles,
+                          onPressed: (isSaving || isDeleting) ? null : _saveUserRoles,
                           icon: isSaving
                               ? const SizedBox(
                                   width: 16,
@@ -321,7 +391,7 @@ class _GestioneUtPageState extends State<GestioneUtPage> {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      // Bottone Elimina
+                      // Bottone Elimina (Collegato ed ottimizzato)
                       Expanded(
                         child: TextButton.icon(
                           style: TextButton.styleFrom(
@@ -332,13 +402,22 @@ class _GestioneUtPageState extends State<GestioneUtPage> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          onPressed: () {
-                            // Logica eliminazione
-                          },
-                          icon: const Icon(Icons.delete_outline),
-                          label: const Text(
-                            "Elimina",
-                            style: TextStyle(fontWeight: FontWeight.bold),
+                          onPressed: (isSaving || isDeleting) ? null : _deleteUserAccount,
+                          icon: isDeleting
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.red,
+                                    ),
+                                  ),
+                                )
+                              : const Icon(Icons.delete_outline),
+                          label: Text(
+                            isDeleting ? "Eliminazione..." : "Elimina",
+                            style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ),
                       ),
@@ -425,11 +504,11 @@ class _GestioneUtPageState extends State<GestioneUtPage> {
   Widget _buildRoleButton(UserRole role, RoleConfig cfg, bool isSelected) {
     return GestureDetector(
       onTap: () {
+        if (isSaving || isDeleting) return; // Blocca modifiche durante i caricamenti
         setState(() {
           if (!isSelected) {
             user.roles.add(role);
           } else {
-            // Rimosso il limite: ora puoi deselezionare tutti i ruoli
             user.roles.remove(role);
           }
         });
