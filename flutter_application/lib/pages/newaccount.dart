@@ -205,7 +205,7 @@ class _NewAccountPageState extends State<NewAccountPage> {
                 setState(() => perito = v);
               }),
 
-              _roleTile("assicuratore", assicuratore, (v) {
+              _roleTile("Assicuratore", assicuratore, (v) {
                 setState(() => assicuratore = v);
               }),
 
